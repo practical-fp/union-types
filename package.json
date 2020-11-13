@@ -1,0 +1,31 @@
+{
+  "name": "union-types",
+  "version": "1.0.0",
+  "description": "A Typescript library for creating discriminated union types",
+  "author": "Felix Schorer",
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc",
+    "clean": "rimraf dist",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.15",
+    "conditional-type-checks": "^1.0.5",
+    "jest": "^26.6.3",
+    "prettier": "^2.1.2",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.4.4",
+    "typescript": "^4.0.5"
+  }
+}
