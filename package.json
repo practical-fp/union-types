@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A Typescript library for creating discriminated union types",
   "author": "Felix Schorer",
+  "repository": "https://github.com/felixschorer/union-types.git",
   "license": "MIT",
   "sideEffects": false,
   "main": "dist/index.js",
