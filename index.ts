@@ -88,7 +88,6 @@ export type Narrow<Var extends AnyVariant, Tag extends Tags<Var>> = Var extends 
  * Type guard for narrowing down the type of a {@link Variant}.
  * @param variant
  * @param tag
- *
  * @example
  * type Union =
  *     | Variant<"1", number>
@@ -119,7 +118,6 @@ export type Predicate<Tag extends string> = <Var extends AnyVariant>(
 /**
  * Factory function for creating a type guard which narrows down the type of a {@link Variant}.
  * @param tag
- *
  * @example
  * type Union =
  *     | Variant<"1", number>
@@ -188,7 +186,6 @@ function containsWildcard<Var extends AnyVariant, Ret>(
  * unless a wildcard case it present.
  * @param variant
  * @param cases
- *
  * @example
  * type Union =
  *     | Variant<"Num", number>
@@ -228,16 +225,16 @@ export function match<Var extends AnyVariant, C extends Cases<Var>>(
  * @param variant
  * @example
  * type Union =
- *     | Variant<"1">
- *     | Variant<"2">
+ *     | Variant<"1", string>
+ *     | Variant<"2", number>
  *
  * function doSomething(union: Union) {
  *     switch(union.tag) {
  *         case "1":
- *             alert(1)
+ *             alert(union.value)
  *             break
  *         case "2":
- *             alert(2)
+ *             alert(union.value.toFixed(0))
  *             break
  *         default:
  *             // compile error if we've forgotten a case
