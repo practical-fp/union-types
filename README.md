@@ -7,6 +7,7 @@ A Typescript library for creating discriminating union types.
 ```bash
 $ npm install union-types
 ```
+[![NPM](https://nodei.co/npm/union-types.png)](https://npmjs.org/package/union-types)
 
 ## Examples
 ### Typescript Handbook Example
