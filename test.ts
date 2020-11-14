@@ -12,11 +12,11 @@ import {
 } from "./index";
 
 type Test = Variant<"Test", number>
-type NotTest = Variant<"NotTest", string>
+type NotTest = Variant<"NotTest">
 type Union = Test | NotTest
 
 assert<IsExact<Tags<Union>, "Test" | "NotTest">>(true)
-assert<IsExact<Values<Union>, number | string>>(true)
+assert<IsExact<Values<Union>, number | undefined>>(true)
 assert<IsExact<Narrow<Union, "Test">, Test>>(true)
 
 interface ExtendedVariant extends Variant<"Test", number> {
@@ -32,10 +32,10 @@ assert<IsExact<typeof neverArray, never[]>>(true)
 
 const matchResult = match({} as Union, {
     Test: (number) => number,
-    NotTest: (string) => string,
+    NotTest: () => undefined,
     [WILDCARD]: () => true,
 })
-assert<IsExact<typeof matchResult, number | string | boolean>>(true)
+assert<IsExact<typeof matchResult, number | undefined | boolean>>(true)
 
 assert<IsExact<typeof assertNever, (_: never) => never>>(true)
 

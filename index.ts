@@ -1,68 +1,216 @@
-export interface Variant<Tag extends string = string, Value = unknown> {
+/**
+ * A type which discriminates on {@link tag}
+ * when used in a union with other instances of this type.
+ *
+ * @example
+ * type Union =
+ *     | Variant<"1">
+ *     | Variant<"2", number>
+ */
+export interface Variant<Tag extends string = string, Value = undefined> {
     readonly tag: Tag
     readonly value: Value
 }
 
-export function tag<Tag extends string>(tag: Tag): Variant<Tag, undefined>
+/**
+ * Utility type which allows any {@link Variant} to be assigned to it.
+ */
+export type AnyVariant = Variant<string, unknown>
+
+/**
+ * Creates a new {@link Variant} instance whose value is undefined.
+ * @param tag
+ */
+export function tag<Tag extends string>(tag: Tag): Variant<Tag>
+
+/**
+ * Creates a new {@link Variant} instance.
+ * @param tag
+ * @param value
+ */
 export function tag<Tag extends string, Value>(tag: Tag, value: Value): Variant<Tag, Value>
-export function tag(tag: string, value?: unknown): Variant {
+export function tag(tag: string, value?: unknown): AnyVariant {
     return {
         tag,
         value,
     }
 }
 
-export type Tags<Var extends Variant> = Var["tag"]
+/**
+ * Utility type for extracting the possible values for {@link Variant#tag}
+ * from a union of {@link Variant}s.
+ *
+ * @example
+ * type Union =
+ *     | Variant<"1">
+ *     | Variant<"2">
+ *     | Variant<"3">
+ *
+ * // Equals: "1" | "3"
+ * type UnionTags = Tags<Union>
+ */
+export type Tags<Var extends AnyVariant> = Var["tag"]
 
-export type Values<Var extends Variant> = Var["value"]
+/**
+ * Utility type for extracting the possible types for {@link Variant#value}
+ * from a union of {@link Variant}s.
+ *
+ * @example
+ * type Union =
+ *     | Variant<"1", string>
+ *     | Variant<"2", number>
+ *
+ * // Equals: string | number
+ * type UnionValues = Values<Union>
+ */
+export type Values<Var extends AnyVariant> = Var["value"]
 
-export type Narrow<Var extends Variant, Tag extends Tags<Var>> = Var extends Variant<
+/**
+ * Utility type for narrowing down a union of {@link Variant}s based on their tags.
+ *
+ * @example
+ * type Union =
+ *     | Variant<"1", 1>
+ *     | Variant<"2", 2>
+ *     | Variant<"3", 3>
+ *
+ * // Equals: Variant<"1", 1> | Variant<"3", 3>
+ * type Narrowed = Narrow<Union, "1" | "3">
+ */
+export type Narrow<Var extends AnyVariant, Tag extends Tags<Var>> = Var extends Variant<
     Tag,
     infer Value
 >
     ? Extract<Var, Variant<Tag, Value>>
     : never
 
-export function hasTag<Var extends Variant, Tag extends Tags<Var>>(
+/**
+ * Type guard for narrowing down the type of a {@link Variant}.
+ * @param variant
+ * @param tag
+ *
+ * @example
+ * type Union =
+ *     | Variant<"1", number>
+ *     | Variant<"2", string>
+ *
+ * function doSomething(union: Union) {
+ *     // union.value has type number | string
+ *
+ *     if (hasTag(union, "1")) {
+ *         // union.value has type number now
+ *     }
+ * }
+ */
+export function hasTag<Var extends AnyVariant, Tag extends Tags<Var>>(
     variant: Var,
     tag: Tag,
 ): variant is Narrow<Var, Tag> {
     return variant.tag === tag
 }
 
-export type Predicate<Tag extends string> = <Var extends Variant>(
+/**
+ * Type of a function which narrows down the type of a given {@link Variant}.
+ */
+export type Predicate<Tag extends string> = <Var extends AnyVariant>(
     variant: Var,
 ) => variant is Narrow<Var, Tag>
 
+/**
+ * Factory function for creating a type guard which narrows down the type of a {@link Variant}.
+ * @param tag
+ *
+ * @example
+ * type Union =
+ *     | Variant<"1", number>
+ *     | Variant<"2", string>
+ *
+ * function doSomething(list: Union[]) {
+ *     // filtered has type Variant<"1", number>[]
+ *     const filtered = list.filter(predicate("1"))
+ * }
+ */
 export function predicate<Tag extends string>(tag: Tag): Predicate<Tag> {
-    return <Var extends Variant>(variant: Var): variant is Narrow<Var, Tag> => hasTag(variant, tag)
+    return <Var extends AnyVariant>(variant: Var): variant is Narrow<Var, Tag> =>
+        hasTag(variant, tag)
 }
 
+/**
+ * Symbol for declaring a wildcard case in a {@link match} expression.
+ */
 export const WILDCARD = Symbol("Match Wildcard")
 
-export type CasesExhaustive<Var extends Variant, Ret> = {
+/**
+ * Internal type for ensuring that a {@link match} expression covers all cases.
+ */
+type CasesExhaustive<Var extends AnyVariant, Ret> = {
     [Tag in Tags<Var>]: (value: Values<Narrow<Var, Tag>>) => Ret
 }
 
-export type CasesWithWildcard<Var extends Variant, Ret> = Partial<CasesExhaustive<Var, Ret>> & {
+/**
+ * Internal type for enabling a {@link match} expression to cover only some cases,
+ * as long as, a wildcard case is declared for matching the remaining cases.
+ */
+type CasesWithWildcard<Var extends AnyVariant, Ret> = Partial<CasesExhaustive<Var, Ret>> & {
     [WILDCARD]: () => Ret
 }
 
-export type Cases<Var extends Variant, Ret = unknown> =
+/**
+ * Utility type for ensuring that a {@link match} expression either covers all cases,
+ * or contains a wildcard for matching the remaining cases.
+ */
+export type Cases<Var extends AnyVariant, Ret = unknown> =
     | CasesExhaustive<Var, Ret>
     | CasesWithWildcard<Var, Ret>
 
-export type CasesReturn<Var extends Variant, C extends Cases<Var>> = C extends Cases<Var, infer Ret>
+/**
+ * Utility type for inferring the return type of a {@link match} expression.
+ */
+export type CasesReturn<Var extends AnyVariant, C extends Cases<Var>> = C extends Cases<
+    Var,
+    infer Ret
+>
     ? Ret
     : never
 
-function containsWildcard<Var extends Variant, Ret>(
+/**
+ * Internal utility function for checking if a {@link match} expression contains a wildcard.
+ * @param cases
+ */
+function containsWildcard<Var extends AnyVariant, Ret>(
     cases: Cases<Var, Ret>,
 ): cases is CasesWithWildcard<Var, Ret> {
     return WILDCARD in cases
 }
 
-export function match<Var extends Variant, C extends Cases<Var>>(
+/**
+ * Function for matching on the tag of a {@link Variant}. All possible cases need to be covered,
+ * unless a wildcard case it present.
+ * @param variant
+ * @param cases
+ *
+ * @example
+ * type Union =
+ *     | Variant<"Num", number>
+ *     | Variant<"Str", string>
+ *     | Variant<"Bool", boolean>
+ *
+ * function doSomething(union: Union) {
+ *     return match(union, {
+ *         Num: number => number * number,
+ *         Str: string => `Hello, ${string}!`,
+ *         Bool: boolean => !boolean,
+ *     })
+ * }
+ *
+ * function doSomethingElse(union: Union) {
+ *     return match(union, {
+ *         Str: string => `Hello, ${string}!`,
+ *         [WILDCARD]: () => "Hello there!",
+ *     })
+ * }
+ */
+export function match<Var extends AnyVariant, C extends Cases<Var>>(
     variant: Var,
     cases: C,
 ): CasesReturn<Var, C> {
@@ -75,6 +223,28 @@ export function match<Var extends Variant, C extends Cases<Var>>(
     throw new Error(`No case matched tag ${variant.tag}.`)
 }
 
-export function assertNever(_: never): never {
+/**
+ * Utility function for asserting that all cases have been covered.
+ * @param variant
+ * @example
+ * type Union =
+ *     | Variant<"1">
+ *     | Variant<"2">
+ *
+ * function doSomething(union: Union) {
+ *     switch(union.tag) {
+ *         case "1":
+ *             alert(1)
+ *             break
+ *         case "2":
+ *             alert(2)
+ *             break
+ *         default:
+ *             // compile error if we've forgotten a case
+ *             assertNever(union)
+ *     }
+ * }
+ */
+export function assertNever(variant: never): never {
     throw new Error("Unreachable state reached!")
 }
