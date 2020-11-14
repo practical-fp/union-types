@@ -14,7 +14,8 @@
   "scripts": {
     "build": "npm run clean && tsc",
     "clean": "rimraf dist",
-    "test": "jest"
+    "test": "jest",
+    "prepublish": "npm run build"
   },
   "jest": {
     "preset": "ts-jest",
