@@ -44,9 +44,8 @@ export function tag(tag: string, value?: unknown): AnyVariant {
  * type Union =
  *     | Variant<"1">
  *     | Variant<"2">
- *     | Variant<"3">
  *
- * // Equals: "1" | "3"
+ * // Equals: "1" | "2"
  * type UnionTags = Tags<Union>
  */
 export type Tags<Var extends AnyVariant> = Var["tag"]
