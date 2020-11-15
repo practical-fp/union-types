@@ -12,7 +12,7 @@ $ npm install @practical-fp/union-types
 ## Examples
 ### Typescript Handbook Example
 ```typescript
-import { match, Variant } from "union-types"
+import { match, Variant } from "@practical-fp/union-types"
 
 type NetworkFailedState = {
     code: number
@@ -40,7 +40,7 @@ function logger(state: NetworkState): string {
 
 ### Using wildcard in `match` expression
 ```typescript
-import { match, Variant, WILDCARD } from "union-types"
+import { match, Variant, WILDCARD } from "@practical-fp/union-types"
 
 type Status =
     | Variant<"Loading">
@@ -57,7 +57,7 @@ function getStatusMessage(status: Status): string {
 
 ### Java Optional Type (Generics)
 ```typescript
-import { match, predicate, tag, Variant } from "union-types"
+import { match, predicate, tag, Variant } from "@practical-fp/union-types"
 
 type Nullable<T> = T | undefined | null
 
@@ -162,7 +162,7 @@ namespace Optional {
 
 ### Filtering arrays using type guards
 ```typescript
-import { predicate, Variant } from "union-types"
+import { predicate, Variant } from "@practical-fp/union-types"
 
 type Number = 
     | Variant<"Preformatted", string> 
@@ -178,7 +178,7 @@ function filterPreformatted(numbers: Number[]) {
 
 ### Usage with `switch` statement
 ```typescript
-import { assertNever, Variant } from "union-types"
+import { assertNever, Variant } from "@practical-fp/union-types"
 
 type Number =
     | Variant<"Preformatted", string>
