@@ -6,10 +6,11 @@ import {
     Narrow,
     predicate,
     tag,
-    Tags, Values,
+    Tags,
+    Values,
     Variant,
-    WILDCARD
-} from "./index";
+    WILDCARD,
+} from "./index"
 
 type Test = Variant<"Test", number>
 type NotTest = Variant<"NotTest">
@@ -22,6 +23,7 @@ assert<IsExact<Narrow<Union, "Test">, Test>>(true)
 interface ExtendedVariant extends Variant<"Test", number> {
     somethingElse: boolean
 }
+
 assert<IsExact<Narrow<ExtendedVariant | NotTest, "Test">, ExtendedVariant>>(true)
 
 const testArray = new Array<Union>().filter(predicate("Test"))
@@ -31,7 +33,7 @@ const neverArray = new Array<Union>().filter(predicate("SomethingElse"))
 assert<IsExact<typeof neverArray, never[]>>(true)
 
 const matchResult = match({} as Union, {
-    Test: (number) => number,
+    Test: number => number,
     NotTest: () => undefined,
     [WILDCARD]: () => true,
 })

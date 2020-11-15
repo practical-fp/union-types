@@ -1,13 +1,13 @@
-# `union-types`
+# `@practical-fp/union-types`
 A Typescript library for creating discriminating union types.
 
 [Typescript Handbook on discriminating union types](https://www.typescriptlang.org/docs/handbook/unions-and-intersections.html#discriminating-unions)
 
 ## Installation
 ```bash
-$ npm install union-types
+$ npm install @practical-fp/union-types
 ```
-[![NPM](https://nodei.co/npm/union-types.png)](https://npmjs.org/package/union-types)
+[![NPM](https://nodei.co/npm/@practical-fp/union-types.png)](https://npmjs.org/package/@practical-fp/union-types)
 
 ## Examples
 ### Typescript Handbook Example
