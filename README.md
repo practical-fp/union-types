@@ -74,7 +74,11 @@ namespace Optional {
     }
 
     export function of<T>(value: T): Optional<T> {
-        return tag("Present", value)
+        if (value === undefined || value === null) {
+            throw new Error("Null pointer.")
+        } else {
+            return tag("Present", value)
+        }
     }
 
     export function ofNullable<T>(value: Nullable<T>): Optional<T> {
