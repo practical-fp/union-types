@@ -1,9 +1,9 @@
 {
   "name": "@practical-fp/union-types",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Typescript library for creating discriminating union types.",
   "author": "Felix Schorer",
-  "repository": "https://github.com/felixschorer/union-types.git",
+  "repository": "https://github.com/practical-fp/union-types.git",
   "license": "MIT",
   "sideEffects": false,
   "main": "dist/index.js",
