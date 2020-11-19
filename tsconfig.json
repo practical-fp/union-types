@@ -1,18 +1,14 @@
 {
   "compilerOptions": {
     "strict": true,
-    "module": "es6",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "target": "es5",
-    "outDir": "dist",
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true
+    "sourceMap": true
   },
   "exclude": [
     "node_modules",
     "dist",
-    "src/test.ts"
+    "test"
   ]
 }

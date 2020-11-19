@@ -1,21 +1,26 @@
 {
   "name": "@practical-fp/union-types",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Typescript library for creating discriminating union types.",
   "author": "Felix Schorer",
   "repository": "https://github.com/practical-fp/union-types.git",
   "license": "MIT",
   "sideEffects": false,
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/typings/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
-    "build": "npm run clean && tsc",
+    "tsc:cjs": "tsc --module commonjs --outDir dist/cjs",
+    "tsc:esm": "tsc --module es6 --outDir dist/esm",
+    "tsc:typings": "tsc --emitDeclarationOnly --declaration --declarationMap --outDir dist/typings",
     "clean": "rimraf dist",
+    "build": "npm run clean && npm run tsc:cjs && npm run tsc:esm && npm run tsc:typings",
     "test": "jest",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run test & npm run build"
   },
   "jest": {
     "preset": "ts-jest",

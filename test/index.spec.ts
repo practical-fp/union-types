@@ -10,15 +10,15 @@ import {
     Values,
     Variant,
     WILDCARD,
-} from "./index"
+} from "../src"
 
-type Test = Variant<"Test", number>
+type IndexSpec = Variant<"Test", number>
 type NotTest = Variant<"NotTest">
-type Union = Test | NotTest
+type Union = IndexSpec | NotTest
 
 assert<IsExact<Tags<Union>, "Test" | "NotTest">>(true)
 assert<IsExact<Values<Union>, number | undefined>>(true)
-assert<IsExact<Narrow<Union, "Test">, Test>>(true)
+assert<IsExact<Narrow<Union, "Test">, IndexSpec>>(true)
 
 interface ExtendedVariant extends Variant<"Test", number> {
     somethingElse: boolean
@@ -27,7 +27,7 @@ interface ExtendedVariant extends Variant<"Test", number> {
 assert<IsExact<Narrow<ExtendedVariant | NotTest, "Test">, ExtendedVariant>>(true)
 
 const testArray = new Array<Union>().filter(predicate("Test"))
-assert<IsExact<typeof testArray, Test[]>>(true)
+assert<IsExact<typeof testArray, IndexSpec[]>>(true)
 
 const neverArray = new Array<Union>().filter(predicate("SomethingElse"))
 assert<IsExact<typeof neverArray, never[]>>(true)
