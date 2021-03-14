@@ -1,6 +1,7 @@
-import { assert, IsExact } from "conditional-type-checks"
+import { assert, Has, IsExact } from "conditional-type-checks"
 import {
     assertNever,
+    impl,
     hasTag,
     match,
     Narrow,
@@ -10,6 +11,7 @@ import {
     Values,
     Variant,
     WILDCARD,
+    Impl,
 } from "../src"
 
 type IndexSpec = Variant<"Test", number>
@@ -40,6 +42,10 @@ const matchResult = match({} as Union, {
 assert<IsExact<typeof matchResult, number | undefined | boolean>>(true)
 
 assert<IsExact<typeof assertNever, (_: never) => never>>(true)
+
+assert<Has<Impl<Variant<"Test", unknown>>["Test"], <T>(value: T) => Variant<"Test", T>>>(true)
+assert<Has<Impl<Variant<"Test", number>>["Test"], <T>(value: T) => Variant<"Test", T>>>(false)
+assert<Has<Impl<Variant<"Test">>["Test"], () => Variant<"Test">>>(true)
 
 test("tag should tag objects", () => {
     const tagged = tag("Test", { number: 42 })
@@ -86,4 +92,9 @@ test("assertNever should throw an error", () => {
         assertNever(undefined as never)
     }
     expect(throws).toThrow(Error)
+})
+
+test("impl should construct a tagged value", () => {
+    const Union = impl<Variant<"Test", number>>()
+    expect(Union.Test(42)).toEqual({ tag: "Test", value: 42 })
 })

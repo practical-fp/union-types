@@ -244,3 +244,27 @@ export function match<Var extends AnyVariant, C extends Cases<Var>>(
 export function assertNever(variant: never): never {
     throw new Error("Unreachable state reached!")
 }
+
+export type Constructor<Tag extends string, Value> = unknown extends Value
+    ? <T>(value: T) => Variant<Tag, T>
+    : Value extends undefined
+    ? () => Variant<Tag>
+    : (value: Value) => Variant<Tag, Value>
+
+export type Impl<Var extends AnyVariant> = {
+    [Tag in Tags<Var>]: Constructor<Tag, Values<Narrow<Var, Tag>>> & {
+        tag: Tag
+        is: Predicate<Tag>
+    }
+}
+
+export function impl<Var extends AnyVariant>(): Impl<Var> {
+    return new Proxy({} as Impl<Var>, {
+        get: (_, tagName: string) => {
+            const constructor = (value: unknown) => tag(tagName, value)
+            constructor.tag = tagName
+            constructor.is = predicate(tagName)
+            return constructor
+        },
+    })
+}
