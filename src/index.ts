@@ -245,21 +245,50 @@ export function assertNever(variant: never): never {
     throw new Error("Unreachable state reached!")
 }
 
+/**
+ * Type which specifies the constructor for a variant type.
+ */
 export type Constructor<Tag extends string, Value> = unknown extends Value
     ? <T>(value: T) => Variant<Tag, T>
     : Value extends undefined
     ? () => Variant<Tag>
     : (value: Value) => Variant<Tag, Value>
 
+/**
+ * Type which specifies the constructor for a variant type with attached type guard.
+ */
 export type ConstructorWithExtra<Tag extends string, Value> = Constructor<Tag, Value> & {
     tag: Tag
     is: Predicate<Tag>
 }
 
+/**
+ * Type which specifies constructors and type guards for a variant type.
+ */
 export type Impl<Var extends AnyVariant> = {
     [Tag in Tags<Var>]: ConstructorWithExtra<Tag, Values<Narrow<Var, Tag>>>
 }
 
+/**
+ * Function for generating an implementation for the given variants.
+ * In case the variant type uses generics, pass unknown as the type arguments.
+ * @example
+ * type Result<T, E> =
+ *     | Variant<"Ok", T>
+ *     | Variant<"Err", E>
+ *
+ * const {Ok, Err} = impl<Result<unknown, unknown>>()
+ *
+ * let result: Result<number, string>
+ * result = Ok(42)
+ * result = Err("Something went wrong")
+ *
+ * Ok.is(result)  // false
+ * Err.is(result)  // true
+ *
+ * Ok.tag  // "Ok"
+ * Err.tag  // "Err"
+ */
 export function impl<Var extends AnyVariant>(): Impl<Var> {
     return new Proxy({} as Impl<Var>, {
         get: (_, tagName: string): ConstructorWithExtra<string, unknown> => {

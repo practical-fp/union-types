@@ -10,6 +10,29 @@ $ npm install @practical-fp/union-types
 [![NPM](https://nodei.co/npm/@practical-fp/union-types.png)](https://npmjs.org/package/@practical-fp/union-types)
 
 ## Examples
+
+### Basic Example
+```typescript
+import { impl, Variant } from "@practical-fp/union-types"
+
+type Result<T, E> =
+    | Variant<"Ok", T>
+    | Variant<"Err", E>
+
+const {Ok, Err} = impl<Result<unknown, unknown>>()
+
+let result: Result<number, string>
+result = Ok(42)
+result = Err("Something went wrong")
+
+Ok.is(result)  // false
+Err.is(result)  // true
+
+Ok.tag  // "Ok"
+Err.tag  // "Err"
+```
+
+
 ### Typescript Handbook Example
 ```typescript
 import { match, Variant } from "@practical-fp/union-types"
@@ -55,128 +78,19 @@ function getStatusMessage(status: Status): string {
 }
 ```
 
-### Java Optional Type (Generics)
-```typescript
-import { match, predicate, tag, Variant } from "@practical-fp/union-types"
-
-type Nullable<T> = T | undefined | null
-
-type Optional<T> = 
-    | Variant<"Present", T> 
-    | Variant<"Empty">
-
-namespace Optional {
-    export const isPresent = predicate("Present")
-    export const isEmpty = predicate("Empty")
-
-    export function empty(): Optional<never> {
-        return tag("Empty")
-    }
-
-    export function of<T>(value: T): Optional<T> {
-        if (value === undefined || value === null) {
-            throw new Error("Null pointer.")
-        } else {
-            return tag("Present", value)
-        }
-    }
-
-    export function ofNullable<T>(value: Nullable<T>): Optional<T> {
-        if (value === undefined || value === null) {
-            return empty()
-        } else {
-            return of(value)
-        }
-    }
-
-    export function get<T>(optional: Optional<T>): T {
-        if (isPresent(optional)) {
-            return optional.value
-        }
-        throw new Error("No such element.")
-    }
-
-    export function orElse<T>(optional: Optional<T>, other: T): T {
-        return match(optional, {
-            Present: (value) => value,
-            Empty: () => other,
-        })
-    }
-
-    export function orElseGet<T>(
-        optional: Optional<T>, 
-        supplier: () => T,
-    ): T {
-        return match(optional, {
-            Present: (value) => value,
-            Empty: () => supplier(),
-        })
-    }
-
-    export function orElseThrow<T>(
-        optional: Optional<T>, 
-        exceptionSupplier: () => Error,
-    ): T {
-        if (isPresent(optional)) {
-            return optional.value
-        }
-        throw exceptionSupplier()
-    }
-
-    export function ifPresent<T>(
-        optional: Optional<T>, 
-        consumer: (value: T) => void,
-    ): void {
-        if (isPresent(optional)) {
-            consumer(optional.value)
-        }
-    }
-
-    export function filter<T>(
-        optional: Optional<T>,
-        predicate: (value: T) => boolean,
-    ): Optional<T> {
-        return match(optional, {
-            Present: (value) => (predicate(value) ? of(value) : empty()),
-            Empty: () => empty(),
-        })
-    }
-
-    export function map<T, U>(
-        optional: Optional<T>,
-        mapper: (value: T) => Nullable<U>,
-    ): Optional<U> {
-        return match(optional, {
-            Present: (value) => ofNullable(mapper(value)),
-            Empty: () => empty(),
-        })
-    }
-
-    export function flatMap<T, U>(
-        optional: Optional<T>,
-        mapper: (value: T) => Optional<U>,
-    ): Optional<U> {
-        return match(optional, {
-            Present: (value) => mapper(value),
-            Empty: () => empty(),
-        })
-    }
-}
-```
-
 ### Filtering arrays using type guards
 ```typescript
-import { predicate, Variant } from "@practical-fp/union-types"
+import { impl, Variant } from "@practical-fp/union-types"
 
 type Number = 
     | Variant<"Preformatted", string> 
     | Variant<"Unformatted", number>
 
-const isPreformatted = predicate("Preformatted")
+const {Preformatted, Unformatted} = impl<Number>()
 
 // inferred return type is Variant<"Preformatted", string>[]
 function filterPreformatted(numbers: Number[]) {
-    return numbers.filter(isPreformatted)
+    return numbers.filter(Preformatted.is)
 }
 ```
 
