@@ -251,17 +251,19 @@ export type Constructor<Tag extends string, Value> = unknown extends Value
     ? () => Variant<Tag>
     : (value: Value) => Variant<Tag, Value>
 
+export type ConstructorWithExtra<Tag extends string, Value> = Constructor<Tag, Value> & {
+    tag: Tag
+    is: Predicate<Tag>
+}
+
 export type Impl<Var extends AnyVariant> = {
-    [Tag in Tags<Var>]: Constructor<Tag, Values<Narrow<Var, Tag>>> & {
-        tag: Tag
-        is: Predicate<Tag>
-    }
+    [Tag in Tags<Var>]: ConstructorWithExtra<Tag, Values<Narrow<Var, Tag>>>
 }
 
 export function impl<Var extends AnyVariant>(): Impl<Var> {
     return new Proxy({} as Impl<Var>, {
-        get: (_, tagName: string) => {
-            const constructor = (value: unknown) => tag(tagName, value)
+        get: (_, tagName: string): ConstructorWithExtra<string, unknown> => {
+            const constructor = <T>(value: T) => tag(tagName, value)
             constructor.tag = tagName
             constructor.is = predicate(tagName)
             return constructor
