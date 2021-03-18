@@ -170,10 +170,9 @@ export type CasesReturn<Var extends AnyVariant, C extends Cases<Var>> = C extend
     ? Ret
     : never
 
-
 /**
  * Function for matching on the tag of a {@link Variant}. All possible cases need to be covered,
- * unless a wildcard case it present.
+ * unless a wildcard case is present.
  * @param variant
  * @param cases
  * @example
@@ -254,6 +253,38 @@ export type ConstructorWithExtra<Tag extends string, Value> = Constructor<Tag, V
 }
 
 /**
+ * Function for creating a constructor for the given variant.
+ * In case the variant type uses generics, pass unknown as its type arguments.
+ *
+ * Use {@link impl} instead if your environment has support for {@link Proxy}.
+ *
+ * @example
+ * type Result<T, E> =
+ *     | Variant<"Ok", T>
+ *     | Variant<"Err", E>
+ *
+ * const Ok = constructor<Result<unknown, unknown>, "Ok">("Ok")
+ * const Err = constructor<Result<unknown, unknown>, "Err">("Err")
+ *
+ * let result: Result<number, string>
+ * result = Ok(42)
+ * result = Err("Something went wrong")
+ *
+ * Ok.is(result)  // false
+ * Err.is(result)  // true
+ *
+ * Ok.tag  // "Ok"
+ * Err.tag  // "Err"
+ */
+export function constructor<Var extends AnyVariant, Tag extends Tags<Var>>(tagName: Tag) {
+    type Ret = ConstructorWithExtra<Tag, Values<Narrow<Var, Tag>>>
+    const constructor = ((value?: unknown) => tag(tagName, value)) as Ret
+    constructor.tag = tagName
+    constructor.is = predicate(tagName)
+    return constructor
+}
+
+/**
  * Type which specifies constructors and type guards for a variant type.
  */
 export type Impl<Var extends AnyVariant> = {
@@ -262,7 +293,7 @@ export type Impl<Var extends AnyVariant> = {
 
 /**
  * Function for generating an implementation for the given variants.
- * In case the variant type uses generics, pass unknown as the type arguments.
+ * In case the variant type uses generics, pass unknown as its type arguments.
  * @example
  * type Result<T, E> =
  *     | Variant<"Ok", T>
@@ -282,11 +313,8 @@ export type Impl<Var extends AnyVariant> = {
  */
 export function impl<Var extends AnyVariant>(): Impl<Var> {
     return new Proxy({} as Impl<Var>, {
-        get: (_, tagName: string): ConstructorWithExtra<string, unknown> => {
-            const constructor = <T>(value: T) => tag(tagName, value)
-            constructor.tag = tagName
-            constructor.is = predicate(tagName)
-            return constructor
+        get: <Tag extends keyof Impl<Var>>(_: Impl<Var>, tagName: Tag) => {
+            return constructor<Var, Tag>(tagName)
         },
     })
 }

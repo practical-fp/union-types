@@ -12,6 +12,7 @@ import {
     Variant,
     WILDCARD,
     Impl,
+    constructor,
 } from "../src"
 
 type Test = Variant<"Test", number>
@@ -94,7 +95,12 @@ test("assertNever should throw an error", () => {
     expect(throws).toThrow(Error)
 })
 
+test("constructor should construct a tagged value", () => {
+    const Test = constructor<Union, "Test">("Test")
+    expect(Test(42)).toEqual({ tag: "Test", value: 42 })
+})
+
 test("impl should construct a tagged value", () => {
-    const Union = impl<Variant<"Test", number>>()
+    const Union = impl<Union>()
     expect(Union.Test(42)).toEqual({ tag: "Test", value: 42 })
 })
