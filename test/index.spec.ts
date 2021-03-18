@@ -14,13 +14,13 @@ import {
     Impl,
 } from "../src"
 
-type IndexSpec = Variant<"Test", number>
+type Test = Variant<"Test", number>
 type NotTest = Variant<"NotTest">
-type Union = IndexSpec | NotTest
+type Union = Test | NotTest
 
 assert<IsExact<Tags<Union>, "Test" | "NotTest">>(true)
 assert<IsExact<Values<Union>, number | undefined>>(true)
-assert<IsExact<Narrow<Union, "Test">, IndexSpec>>(true)
+assert<IsExact<Narrow<Union, "Test">, Test>>(true)
 
 interface ExtendedVariant extends Variant<"Test", number> {
     somethingElse: boolean
@@ -29,7 +29,7 @@ interface ExtendedVariant extends Variant<"Test", number> {
 assert<IsExact<Narrow<ExtendedVariant | NotTest, "Test">, ExtendedVariant>>(true)
 
 const testArray = new Array<Union>().filter(predicate("Test"))
-assert<IsExact<typeof testArray, IndexSpec[]>>(true)
+assert<IsExact<typeof testArray, Test[]>>(true)
 
 const neverArray = new Array<Union>().filter(predicate("SomethingElse"))
 assert<IsExact<typeof neverArray, never[]>>(true)
