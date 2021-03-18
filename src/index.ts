@@ -170,15 +170,6 @@ export type CasesReturn<Var extends AnyVariant, C extends Cases<Var>> = C extend
     ? Ret
     : never
 
-/**
- * Internal utility function for checking if a {@link match} expression contains a wildcard.
- * @param cases
- */
-function containsWildcard<Var extends AnyVariant, Ret>(
-    cases: Cases<Var, Ret>,
-): cases is CasesWithWildcard<Var, Ret> {
-    return WILDCARD in cases
-}
 
 /**
  * Function for matching on the tag of a {@link Variant}. All possible cases need to be covered,
@@ -210,13 +201,13 @@ export function match<Var extends AnyVariant, C extends Cases<Var>>(
     variant: Var,
     cases: C,
 ): CasesReturn<Var, C> {
-    const tag: Tags<Var> = variant.tag
-    if (tag in cases && cases[tag]) {
-        return (cases[tag] as Function)(variant.value)
-    } else if (containsWildcard(cases)) {
-        return (cases[WILDCARD] as Function)()
+    const tag = variant.tag
+    if (typeof (cases as any)[tag] === "function") {
+        return (cases as any)[tag](variant.value)
+    } else if (typeof (cases as any)[WILDCARD] === "function") {
+        return (cases as any)[WILDCARD]()
     }
-    throw new Error(`No case matched tag ${variant.tag}.`)
+    throw new Error(`No case matched tag ${tag}.`)
 }
 
 /**
