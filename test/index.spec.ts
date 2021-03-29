@@ -46,6 +46,7 @@ assert<IsExact<typeof assertNever, (_: never) => never>>(true)
 
 assert<Has<Impl<Variant<"Test", unknown>>["Test"], <T>(value: T) => Variant<"Test", T>>>(true)
 assert<Has<Impl<Variant<"Test", number>>["Test"], <T>(value: T) => Variant<"Test", T>>>(false)
+assert<Has<Impl<Variant<"Test", number>>["Test"], <T extends number>(value: T) => Variant<"Test", T>>>(true)
 assert<Has<Impl<Variant<"Test">>["Test"], () => Variant<"Test">>>(true)
 
 test("tag should tag objects", () => {
