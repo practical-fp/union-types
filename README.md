@@ -1,13 +1,13 @@
 # Union Types
 
-A Typescript library for creating discriminating union types.
-
-[Typescript Handbook on discriminating union types](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)
-
 [![NPM version](https://img.shields.io/npm/v/@practical-fp/union-types)](https://npmjs.org/package/@practical-fp/union-types)
 ![NPM](https://img.shields.io/npm/l/@practical-fp/union-types)
 ![Dependencies](https://img.shields.io/david/practical-fp/union-types)
 ![Bundle Size](https://img.shields.io/bundlephobia/min/@practical-fp/union-types)
+
+A Typescript library for creating discriminating union types.
+
+[Typescript Handbook on discriminating union types](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)
 
 ## Example
 
