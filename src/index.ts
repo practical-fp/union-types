@@ -171,8 +171,8 @@ export type CasesReturn<Var extends AnyVariant, C extends Cases<Var>> = C extend
     : never
 
 /**
- * Function for matching on the tag of a {@link Variant}. All possible cases need to be covered,
- * unless a wildcard case is present.
+ * Function for matching on the tag of a {@link Variant}.
+ * All possible cases need to be covered, unless a wildcard case is present.
  * @param variant
  * @param cases
  * @example
@@ -252,7 +252,12 @@ export type ConstructorWithExtra<Tag extends string, Value> = Constructor<Tag, V
 
 /**
  * Function for creating a constructor for the given variant.
- * In case the variant type uses generics, pass unknown as its type arguments.
+ *
+ * In case the variant type uses unconstrained generics,
+ * pass unknown as its type arguments.
+ *
+ * In case the variant type uses constrained generics,
+ * pass the constraint type as its type arguments.
  *
  * Use {@link impl} instead if your environment has support for {@link Proxy}.
  *
@@ -291,7 +296,13 @@ export type Impl<Var extends AnyVariant> = {
 
 /**
  * Function for generating an implementation for the given variants.
- * In case the variant type uses generics, pass unknown as its type arguments.
+ *
+ * In case the variant type uses unconstrained generics,
+ * pass unknown as its type arguments.
+ *
+ * In case the variant type uses constrained generics,
+ * pass the constraint type as its type arguments.
+ *
  * @example
  * type Result<T, E> =
  *     | Variant<"Ok", T>

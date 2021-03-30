@@ -45,8 +45,10 @@ assert<IsExact<typeof matchResult, number | undefined | boolean>>(true)
 assert<IsExact<typeof assertNever, (_: never) => never>>(true)
 
 assert<Has<Impl<Variant<"Test", unknown>>["Test"], <T>(value: T) => Variant<"Test", T>>>(true)
+
 assert<Has<Impl<Variant<"Test", number>>["Test"], <T>(value: T) => Variant<"Test", T>>>(false)
 assert<Has<Impl<Variant<"Test", number>>["Test"], <T extends number>(value: T) => Variant<"Test", T>>>(true)
+
 assert<Has<Impl<Variant<"Test">>["Test"], () => Variant<"Test">>>(true)
 
 test("tag should tag objects", () => {
@@ -89,6 +91,13 @@ test("match should call the wildcard", () => {
     expect(result).toBe(true)
 })
 
+test("match should throw an error when an unexpected tag is encountered", () => {
+    const throws = () => {
+        match(tag("Test"), {} as any)
+    }
+    expect(throws).toThrow(Error)
+})
+
 test("assertNever should throw an error", () => {
     const throws = () => {
         assertNever(undefined as never)
@@ -104,4 +113,9 @@ test("constructor should construct a tagged value", () => {
 test("impl should construct a tagged value", () => {
     const Union = impl<Union>()
     expect(Union.Test(42)).toEqual({ tag: "Test", value: 42 })
+})
+
+test("impl should construct an empty tagged value", () => {
+    const Union = impl<Union>()
+    expect(Union.NotTest()).toEqual({ tag: "NotTest", value: undefined })
 })
