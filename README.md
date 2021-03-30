@@ -9,6 +9,28 @@ A Typescript library for creating discriminating union types.
 ![Dependencies](https://img.shields.io/david/practical-fp/union-types)
 ![Bundle Size](https://img.shields.io/bundlephobia/min/@practical-fp/union-types)
 
+## Example
+
+```typescript
+import { impl, match, Variant } from "@practical-fp/union-types"
+
+type Shape =
+    | Variant<"Circle", { radius: number }>
+    | Variant<"Square", { sideLength: number }>
+
+const { Circle, Square } = impl<Shape>()
+
+function getArea(shape: Shape) {
+    return match(shape, {
+        Circle: ({ radius }) => Math.PI * radius ** 2,
+        Square: ({ sideLength }) => sideLength ** 2,
+    })
+}
+
+const circle = Circle({ radius: 5 })
+const area = getArea(circle)
+```
+
 ## Installation
 
 ```bash
