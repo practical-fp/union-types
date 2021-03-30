@@ -152,5 +152,5 @@ type Result<T extends object, E> =
     | Variant<"Ok", T>
     | Variant<"Err", E>
 
-const { Mamal, Other } = impl<Result<object, unknown>>()
+const { Ok, Err } = impl<Result<object, unknown>>()
 ```
