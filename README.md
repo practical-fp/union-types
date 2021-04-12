@@ -6,7 +6,7 @@
 [![Tree shaking support badge](https://badgen.net/bundlephobia/tree-shaking/@practical-fp/union-types)](https://bundlephobia.com/result?p=@practical-fp/union-types)
 ![License badge](https://img.shields.io/npm/l/@practical-fp/union-types)
 
-A Typescript library for creating discriminating union types.
+A Typescript library for creating discriminating union types. Requires Typescript 3.5 or higher.
 
 [Typescript Handbook on discriminating union types](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)
 
