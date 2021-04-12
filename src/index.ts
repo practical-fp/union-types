@@ -238,9 +238,9 @@ export function assertNever(variant: never): never {
 /**
  * Type which specifies the constructor for a variant type.
  */
-export type Constructor<Tag extends string, Value> = Value extends undefined
-    ? () => Variant<Tag>
-    : <T extends Value>(value: T) => Variant<Tag, T>
+export type Constructor<Tag extends string, Value> = <T extends Value>(
+    value: Value extends undefined ? T | void : T,
+) => Variant<Tag, T>
 
 /**
  * Type which specifies the constructor for a variant type with attached type guard.
@@ -279,9 +279,13 @@ export type ConstructorWithExtra<Tag extends string, Value> = Constructor<Tag, V
  * Ok.tag  // "Ok"
  * Err.tag  // "Err"
  */
-export function constructor<Var extends AnyVariant, Tag extends Tags<Var>>(tagName: Tag) {
-    type Ret = ConstructorWithExtra<Tag, Values<Narrow<Var, Tag>>>
-    const constructor = ((value?: unknown) => tag(tagName, value)) as Ret
+export function constructor<Var extends AnyVariant, Tag extends Tags<Var>>(
+    tagName: Tag,
+): ConstructorWithExtra<Tag, Values<Narrow<Var, Tag>>> {
+    function constructor<T>(value: T) {
+        return tag(tagName, value)
+    }
+
     constructor.tag = tagName
     constructor.is = predicate(tagName)
     return constructor
