@@ -1,6 +1,6 @@
 import { assert, IsExact } from "conditional-type-checks"
 import {
-    assertNever, Cases,
+    assertNever,
     constructor,
     Constructor,
     hasTag,
@@ -14,7 +14,6 @@ import {
     Variant,
     WILDCARD,
 } from "../src"
-import Benchmark from "benchmark"
 
 test("Tags should extract the tag of a variant", () => {
     type Var = Variant<"1">
@@ -194,56 +193,4 @@ test("impl should construct an empty tagged value", () => {
     type Union = Variant<"1", number> | Variant<"2">
     const Union = impl<Union>()
     expect(Union[2]()).toEqual({ tag: "2", value: undefined })
-})
-
-test("constructor shouldn't have a performance impact", () => {
-    type Var = Variant<"Var", number>
-    const { Var } = impl<Var>()
-
-    const nativeBenchmark = new Benchmark(() => ({
-        tag: "Var",
-        value: 42,
-    })).run()
-    console.log("Native operations per second:", nativeBenchmark.hz.toFixed())
-
-    const constructorBenchmark = new Benchmark(() => Var(42)).run()
-    console.log("Constructor operations per second:", constructorBenchmark.hz.toFixed())
-
-    expect(constructorBenchmark.hz).toBeGreaterThan(0.9 * nativeBenchmark.hz)
-})
-
-test("type guard shouldn't have a performance impact", () => {
-    type Var = Variant<"Var", number>
-    const { Var } = impl<Var>()
-    const variant = Var(42)
-
-    const nativeBenchmark = new Benchmark(() => variant.tag === "Var").run()
-    console.log("Native operations per second:", nativeBenchmark.hz.toFixed())
-
-    const typeGuardBenchmark = new Benchmark(() => Var.is(variant)).run()
-    console.log("Type guard operations per second:", typeGuardBenchmark.hz.toFixed())
-
-    expect(typeGuardBenchmark.hz).toBeGreaterThan(0.9 * nativeBenchmark.hz)
-})
-
-test("match shouldn't have a performance impact", () => {
-    type Var = Variant<"Var", number>
-    const { Var } = impl<Var>()
-    const variant = Var(42)
-    const cases: Cases<Var> = { Var: value => value }
-
-    const nativeBenchmark = new Benchmark(() => {
-        switch (variant.tag) {
-            case "Var":
-                return variant.value
-        }
-    }).run()
-    console.log("Native operations per second:", nativeBenchmark.hz.toFixed())
-
-    const matchBenchmark = new Benchmark(() => {
-        return match(variant, cases)
-    }).run()
-    console.log("Match operations per second:", matchBenchmark.hz.toFixed())
-
-    expect(matchBenchmark.hz).toBeGreaterThan(0.9 * nativeBenchmark.hz)
 })
