@@ -13,7 +13,7 @@ A Typescript library for creating discriminating union types. Requires Typescrip
 ## Example
 
 ```typescript
-import { impl, match, Variant } from "@practical-fp/union-types"
+import { impl, matchExhaustive, Variant } from "@practical-fp/union-types"
 
 type Shape =
     | Variant<"Circle", { radius: number }>
@@ -22,7 +22,7 @@ type Shape =
 const { Circle, Square } = impl<Shape>()
 
 function getArea(shape: Shape) {
-    return match(shape, {
+    return matchExhaustive(shape, {
         Circle: ({ radius }) => Math.PI * radius ** 2,
         Square: ({ sideLength }) => sideLength ** 2,
     })
@@ -106,24 +106,24 @@ const isSquare = predicate("Square")
 ### Matching against a union
 
 ```typescript
-import { match } from "@practical-fp/union-types"
+import { matchExhaustive } from "@practical-fp/union-types"
 
 function getArea(shape: Shape) {
-    return match(shape, {
+    return matchExhaustive(shape, {
         Circle: ({ radius }) => Math.PI * radius ** 2,
         Square: ({ sideLength }) => sideLength ** 2,
     })
 }
 ```
 
-`match()` is exhaustive by default, i.e., you need to match against every variant of the union.
-Cases can be omitted when using a wildcard case.
+`matchExhaustive()` is exhaustive, i.e., you need to match against every variant of the union.
+Cases can be omitted when using a wildcard case with `matchWildcard()`.
 
 ```typescript
-import { match, WILDCARD } from "@practical-fp/union-types"
+import { matchWildcard, WILDCARD } from "@practical-fp/union-types"
 
 function getDiameter(shape: Shape) {
-    return match(shape, {
+    return matchWildcard(shape, {
         Circle: ({ radius }) => radius * 2,
         [WILDCARD]: () => undefined,
     })

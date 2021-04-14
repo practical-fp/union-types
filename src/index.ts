@@ -138,27 +138,28 @@ export function predicate<Tag extends string>(tag: Tag): Predicate<Tag> {
 export const WILDCARD = Symbol("Match Wildcard")
 
 /**
- * Internal type for ensuring that a {@link match} expression covers all cases.
+ * Utility type for ensuring that a {@link matchExhaustive} expression covers all cases.
  */
-type CasesExhaustive<Var extends AnyVariant, Ret> = {
+export type CasesExhaustive<Var extends AnyVariant, Ret = unknown> = {
     [Tag in Tags<Var>]: (value: Values<Narrow<Var, Tag>>) => Ret
 }
 
 /**
- * Internal type for enabling a {@link match} expression to cover only some cases,
+ * Utility type for enabling a {@link matchWildcard} expression to cover only some cases,
  * as long as, a wildcard case is declared for matching the remaining cases.
  */
-type CasesWithWildcard<Var extends AnyVariant, Ret> = Partial<CasesExhaustive<Var, Ret>> & {
-    [WILDCARD]: () => Ret
-}
+export type CasesWildcard<Var extends AnyVariant, Ret = unknown> = Partial<
+    CasesExhaustive<Var, Ret>
+> & { [WILDCARD]: () => Ret }
 
 /**
  * Utility type for ensuring that a {@link match} expression either covers all cases,
  * or contains a wildcard for matching the remaining cases.
+ * @deprecated Use {@link CasesExhaustive} or {@link CasesWildcard} instead.
  */
 export type Cases<Var extends AnyVariant, Ret = unknown> =
     | CasesExhaustive<Var, Ret>
-    | CasesWithWildcard<Var, Ret>
+    | CasesWildcard<Var, Ret>
 
 /**
  * Utility type for inferring the return type of a {@link match} expression.
@@ -195,6 +196,7 @@ export type CasesReturn<Var extends AnyVariant, C extends Cases<Var>> = C extend
  *         [WILDCARD]: () => "Hello there!",
  *     })
  * }
+ * @deprecated Use {@link matchWildcard} or {@matchWildcard} instead.
  */
 export function match<Var extends AnyVariant, C extends Cases<Var>>(
     variant: Var,
@@ -207,6 +209,58 @@ export function match<Var extends AnyVariant, C extends Cases<Var>>(
         return (cases as any)[WILDCARD]()
     }
     throw new Error(`No case matched tag ${tag}.`)
+}
+
+/**
+ * Function for matching on the tag of a {@link Variant}.
+ * All possible cases need to be covered.
+ * @param variant
+ * @param cases
+ * @example
+ * type Union =
+ *     | Variant<"Num", number>
+ *     | Variant<"Str", string>
+ *     | Variant<"Bool", boolean>
+ *
+ * function doSomething(union: Union) {
+ *     return matchExhaustive(union, {
+ *         Num: number => number * number,
+ *         Str: string => `Hello, ${string}!`,
+ *         Bool: boolean => !boolean,
+ *     })
+ * }
+ */
+export function matchExhaustive<Var extends AnyVariant, C extends CasesExhaustive<Var>>(
+    variant: Var,
+    cases: C,
+): CasesReturn<Var, C> {
+    return match(variant, cases)
+}
+
+/**
+ * Function for matching on the tag of a {@link Variant}.
+ * Not all cases need to be covered, a wildcard case needs to be present.
+ * @param variant
+ * @param cases
+ * @example
+ * type Union =
+ *     | Variant<"Num", number>
+ *     | Variant<"Str", string>
+ *     | Variant<"Bool", boolean>
+ *
+ *
+ * function doSomething(union: Union) {
+ *     return matchWildcard(union, {
+ *         Str: string => `Hello, ${string}!`,
+ *         [WILDCARD]: () => "Hello there!",
+ *     })
+ * }
+ */
+export function matchWildcard<Var extends AnyVariant, C extends CasesWildcard<Var>>(
+    variant: Var,
+    cases: C,
+): CasesReturn<Var, C> {
+    return match(variant, cases)
 }
 
 /**

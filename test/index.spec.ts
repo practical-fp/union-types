@@ -6,6 +6,8 @@ import {
     hasTag,
     impl,
     match,
+    matchExhaustive,
+    matchWildcard,
     Narrow,
     predicate,
     tag,
@@ -148,7 +150,7 @@ test("predicate should test whether a tagged object has a certain tag", () => {
 })
 
 test("match should call the matching handler", () => {
-    const result = match(tag("Test"), {
+    const result = matchWildcard(tag("Test"), {
         Test: () => true,
         [WILDCARD]: () => false,
     })
@@ -156,7 +158,7 @@ test("match should call the matching handler", () => {
 })
 
 test("match should call the wildcard", () => {
-    const result = match(tag("Test"), {
+    const result = matchWildcard(tag("Test"), {
         NotTest: () => false,
         [WILDCARD]: () => true,
     })
@@ -165,7 +167,7 @@ test("match should call the wildcard", () => {
 
 test("match should throw an error when an unexpected tag is encountered", () => {
     const throws = () => {
-        match(tag("Test"), {} as any)
+        matchExhaustive(tag("Test"), {} as any)
     }
     expect(throws).toThrow(Error)
 })
