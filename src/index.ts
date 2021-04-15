@@ -219,7 +219,7 @@ export function match<Var extends AnyVariant, C extends Cases<Var>>(
  * Passing extra arguments is probably a spelling mistake.
  * Therefore, we restrict the properties by setting extra properties to never.
  *
- * Typescript 4.2 will show a nice hint asking whether you did misspelled the property name.
+ * Typescript 4.2 will show a nice hint asking whether you've misspelled the property name.
  */
 export type ValidateProperties<T, AllowedProperties extends keyof T> = {
     [_ in Exclude<keyof T, AllowedProperties>]: never
@@ -261,7 +261,6 @@ export function matchExhaustive<Var extends AnyVariant, Cases extends CasesExhau
  *     | Variant<"Num", number>
  *     | Variant<"Str", string>
  *     | Variant<"Bool", boolean>
- *
  *
  * function doSomething(union: Union) {
  *     return matchWildcard(union, {
