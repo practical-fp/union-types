@@ -159,7 +159,6 @@ test("match should call the matching handler", () => {
 
 test("match should call the wildcard", () => {
     const result = matchWildcard(tag("Test"), {
-        NotTest: () => false,
         [WILDCARD]: () => true,
     })
     expect(result).toBe(true)

@@ -212,6 +212,21 @@ export function match<Var extends AnyVariant, C extends Cases<Var>>(
 }
 
 /**
+ * Helper type to restrict the possible keys of a type.
+ *
+ * This is useful for {@link matchExhaustive} and {@link matchWildcard} where the cases argument
+ * needs to be generic to infer the correct return type.
+ * However, due to the argument being generic it is allowed to pass extra properties.
+ * Passing extra arguments is probably a spelling mistake.
+ * Therefore, we restrict the properties by setting extra properties to never.
+ *
+ * Typescript 4.2 will show a nice hint asking whether you did misspelled the property name.
+ */
+export type ValidateProperties<T, AllowedProperties extends keyof T> = {
+    [_ in Exclude<keyof T, AllowedProperties>]: never
+}
+
+/**
  * Function for matching on the tag of a {@link Variant}.
  * All possible cases need to be covered.
  * @param variant
@@ -230,10 +245,10 @@ export function match<Var extends AnyVariant, C extends Cases<Var>>(
  *     })
  * }
  */
-export function matchExhaustive<Var extends AnyVariant, C extends CasesExhaustive<Var>>(
+export function matchExhaustive<Var extends AnyVariant, Cases extends CasesExhaustive<Var>>(
     variant: Var,
-    cases: C,
-): CasesReturn<Var, C> {
+    cases: Cases & ValidateProperties<Cases, keyof CasesExhaustive<Var>>,
+): CasesReturn<Var, Cases> {
     return match(variant, cases)
 }
 
@@ -256,10 +271,10 @@ export function matchExhaustive<Var extends AnyVariant, C extends CasesExhaustiv
  *     })
  * }
  */
-export function matchWildcard<Var extends AnyVariant, C extends CasesWildcard<Var>>(
+export function matchWildcard<Var extends AnyVariant, Cases extends CasesWildcard<Var>>(
     variant: Var,
-    cases: C,
-): CasesReturn<Var, C> {
+    cases: Cases & ValidateProperties<Cases, keyof CasesWildcard<Var>>,
+): CasesReturn<Var, Cases> {
     return match(variant, cases)
 }
 
