@@ -76,12 +76,10 @@ export type Values<Var extends AnyVariant> = Var["value"]
  * // Equals: Variant<"1", 1> | Variant<"3", 3>
  * type Narrowed = Narrow<Union, "1" | "3">
  */
-export type Narrow<Var extends AnyVariant, Tag extends Tags<Var>> = Var extends Variant<
-    Tag,
-    infer Value
+export type Narrow<Var extends AnyVariant, Tag extends Tags<Var>> = Extract<
+    Var,
+    Variant<Tag, unknown>
 >
-    ? Extract<Var, Variant<Tag, Value>>
-    : never
 
 /**
  * Type guard for narrowing down the type of a {@link Variant}.
