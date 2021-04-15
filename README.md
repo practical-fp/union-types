@@ -153,7 +153,7 @@ function getArea(shape: Shape) {
 `impl<>()` and `constructor<>()` also support generic union types.
 
 In case the variant type uses unconstrained generics, 
-`unknown` needs to be passed as its type arguments.
+`any` or `unknown` needs to be passed as its type arguments.
 
 ```typescript
 import { impl, Variant } from "@practical-fp/union-types"
@@ -162,7 +162,7 @@ type Result<T, E> =
     | Variant<"Ok", T>
     | Variant<"Err", E>
 
-const { Ok, Err } = impl<Result<unknown, unknown>>()
+const { Ok, Err } = impl<Result<any, any>>()
 ```
 
 In case the variant type uses constrained generics,
@@ -175,5 +175,5 @@ type Result<T extends object, E> =
     | Variant<"Ok", T>
     | Variant<"Err", E>
 
-const { Ok, Err } = impl<Result<object, unknown>>()
+const { Ok, Err } = impl<Result<object, any>>()
 ```
