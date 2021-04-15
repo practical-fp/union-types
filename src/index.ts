@@ -155,7 +155,6 @@ export type CasesWildcard<Var extends AnyVariant, Ret = unknown> = Partial<
 /**
  * Utility type for ensuring that a {@link match} expression either covers all cases,
  * or contains a wildcard for matching the remaining cases.
- * @deprecated Use {@link CasesExhaustive} or {@link CasesWildcard} instead.
  */
 export type Cases<Var extends AnyVariant, Ret = unknown> =
     | CasesExhaustive<Var, Ret>
