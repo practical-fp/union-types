@@ -177,3 +177,32 @@ type Result<T extends object, E> =
 
 const { Ok, Err } = impl<Result<object, unknown>>()
 ```
+
+### `strictImpl<>()` and `strictConstructor<>()`
+`impl<>()` and `constructor<>()` generate generic constructor functions.
+This may not always be desirable.
+
+```typescript
+import { impl } from "@practical-fp/union-types"
+
+const { Circle } = impl<Shape>()
+const circle = Circle({
+    radius: 5,
+    color: "red",
+})
+```
+
+Since `Circle` is generic, it's perfectly fine to pass extra properties other than `radius`.
+
+To prevent that, we can use `strictImpl<>()` or `strictConstructor<>()` to create a strict 
+implementation which is not generic.
+
+```typescript
+import { strictImpl } from "@practical-fp/union-types"
+
+const { Circle } = strictImpl<Shape>()
+const circle = Circle({
+    radius: 5,
+    color: "red",  // compile error
+})
+```
