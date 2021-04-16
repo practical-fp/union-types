@@ -367,7 +367,7 @@ export type Impl<Var extends AnyVariant> = {
  * Function for generating an implementation for the given variants.
  *
  * In case the variant type uses unconstrained generics,
- * pass any or unknown as its type arguments.
+ * pass unknown as its type arguments.
  *
  * In case the variant type uses constrained generics,
  * pass the constraint type as its type arguments.
@@ -377,7 +377,7 @@ export type Impl<Var extends AnyVariant> = {
  *     | Variant<"Ok", T>
  *     | Variant<"Err", E>
  *
- * const {Ok, Err} = impl<Result<any, any>>()
+ * const {Ok, Err} = impl<Result<unknown, unknown>>()
  *
  * let result: Result<number, string>
  * result = Ok(42)
