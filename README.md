@@ -1,7 +1,7 @@
 # Union Types
 
 [![NPM version badge](https://badgen.net/npm/v/@practical-fp/union-types)](https://npmjs.org/package/@practical-fp/union-types)
-[![Bundle size badge](https://badgen.net/bundlephobia/min/@practical-fp/union-types)](https://bundlephobia.com/result?p=@practical-fp/union-types)
+[![Bundle size badge](https://badgen.net/bundlephobia/minzip/@practical-fp/union-types)](https://bundlephobia.com/result?p=@practical-fp/union-types)
 [![Dependency count badge](https://badgen.net/bundlephobia/dependency-count/@practical-fp/union-types)](https://bundlephobia.com/result?p=@practical-fp/union-types)
 [![Tree shaking support badge](https://badgen.net/bundlephobia/tree-shaking/@practical-fp/union-types)](https://bundlephobia.com/result?p=@practical-fp/union-types)
 ![License badge](https://img.shields.io/npm/l/@practical-fp/union-types)
