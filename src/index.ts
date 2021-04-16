@@ -308,12 +308,33 @@ export type Constructor<Tag extends string, Value> = <T extends Value>(
 ) => Variant<Tag, T>
 
 /**
- * Type which specifies the constructor for a variant type with attached type guard.
+ * Type which specifies the strict constructor for a variant type.
+ * It does not support generics.
  */
-export type ConstructorWithExtra<Tag extends string, Value> = Constructor<Tag, Value> & {
+export type StrictConstructor<Tag extends string, Value> = (
+    value: Value extends undefined ? Value | void : Value,
+) => Variant<Tag, Value>
+
+/**
+ * Type which specifies the extra properties which are attached to a constructor.
+ */
+export interface ConstructorExtra<Tag extends string> {
     tag: Tag
     is: Predicate<Tag>
 }
+
+/**
+ * Type which specifies the constructor for a variant type with attached type guard.
+ */
+export type ConstructorWithExtra<Tag extends string, Value> = Constructor<Tag, Value> &
+    ConstructorExtra<Tag>
+
+/**
+ * Type which specifies the strict constructor for a variant type with attached type guard.
+ * It does not support generics.
+ */
+export type StrictConstructorWithExtra<Tag extends string, Value> = StrictConstructor<Tag, Value> &
+    ConstructorExtra<Tag>
 
 /**
  * Function for creating a constructor for the given variant.
@@ -357,10 +378,28 @@ export function constructor<Var extends AnyVariant, Tag extends Tags<Var>>(
 }
 
 /**
+ * Same as {@link constructor}, but does not support generics.
+ * @param tagName
+ */
+export function strictConstructor<Var extends AnyVariant, Tag extends Tags<Var>>(
+    tagName: Tag,
+): StrictConstructorWithExtra<Tag, Values<Narrow<Var, Tag>>> {
+    return constructor(tagName)
+}
+
+/**
  * Type which specifies constructors and type guards for a variant type.
  */
 export type Impl<Var extends AnyVariant> = {
     [Tag in Tags<Var>]: ConstructorWithExtra<Tag, Values<Narrow<Var, Tag>>>
+}
+
+/**
+ * Type which specifies strict constructors and type guards for a variant type.
+ * It does not support generics.
+ */
+export type StrictImpl<Var extends AnyVariant> = {
+    [Tag in Tags<Var>]: StrictConstructorWithExtra<Tag, Values<Narrow<Var, Tag>>>
 }
 
 /**
@@ -395,4 +434,11 @@ export function impl<Var extends AnyVariant>(): Impl<Var> {
             return constructor<Var, Tag>(tagName)
         },
     })
+}
+
+/**
+ * Same as {@link impl}, but does not support generics.
+ */
+export function strictImpl<Var extends AnyVariant>(): StrictImpl<Var> {
+    return impl()
 }
