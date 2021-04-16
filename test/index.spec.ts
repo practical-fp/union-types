@@ -12,6 +12,7 @@ import {
     predicate,
     tag,
     Tags,
+    untag,
     Values,
     Variant,
     WILDCARD,
@@ -133,6 +134,11 @@ test("tag should tag objects", () => {
 test("tag should create tagged objects", () => {
     const tagged = tag("Test")
     expect(hasTag(tagged, "Test")).toBe(true)
+})
+
+test("untag should extract the value", () => {
+    const tagged = tag("Test", { number: 42 })
+    expect(untag(tagged)).toEqual({ number: 42 })
 })
 
 test("hasTag should test whether a tagged object has a certain tag", () => {

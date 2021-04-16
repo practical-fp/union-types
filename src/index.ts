@@ -37,6 +37,14 @@ export function tag(tag: string, value?: unknown): AnyVariant {
 }
 
 /**
+ * Extracts the value form a @link Variant} instance.
+ * @param variant
+ */
+export function untag<Value>(variant: Variant<string, Value>): Value {
+    return variant.value
+}
+
+/**
  * Utility type for extracting the possible values for {@link Variant#tag}
  * from a union of {@link Variant}s.
  *
