@@ -201,7 +201,7 @@ export type CasesReturn<Var extends AnyVariant, C extends Cases<Var>> = C extend
  *         [WILDCARD]: () => "Hello there!",
  *     })
  * }
- * @deprecated Use {@link matchWildcard} or {@matchWildcard} instead.
+ * @deprecated Use {@link matchWildcard} or {@link matchWildcard} instead.
  */
 export function match<Var extends AnyVariant, C extends Cases<Var>>(
     variant: Var,
