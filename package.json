@@ -1,7 +1,17 @@
 {
   "name": "@practical-fp/union-types",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "A Typescript library for creating discriminating union types.",
+  "keywords": [
+    "typescript",
+    "ts",
+    "discriminating",
+    "union",
+    "type",
+    "algebraic",
+    "sum",
+    "enum"
+  ],
   "author": "Felix Schorer",
   "repository": "https://github.com/practical-fp/union-types.git",
   "license": "MIT",
