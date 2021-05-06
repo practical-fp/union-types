@@ -206,12 +206,15 @@ export type CasesReturn<Var extends AnyVariant, C extends Cases<Var>> = C extend
 export function match<Var extends AnyVariant, C extends Cases<Var>>(
     variant: Var,
     cases: C,
-): CasesReturn<Var, C> {
-    const tag = variant.tag
-    if (typeof (cases as any)[tag] === "function") {
-        return (cases as any)[tag](variant.value)
-    } else if (typeof (cases as any)[WILDCARD] === "function") {
-        return (cases as any)[WILDCARD]()
+): CasesReturn<Var, C>
+export function match(variant: AnyVariant, cases: CasesWildcard<AnyVariant>): unknown {
+    const caseFn = cases[variant.tag]
+    if (caseFn) {
+        return caseFn(variant.value)
+    }
+    const wildcardFn = cases[WILDCARD]
+    if (wildcardFn) {
+        return wildcardFn()
     }
     throw new Error(`No case matched tag ${tag}.`)
 }
