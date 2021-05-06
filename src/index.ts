@@ -177,6 +177,14 @@ export type CasesReturn<Var extends AnyVariant, C extends Cases<Var>> = C extend
     : never
 
 /**
+ * Internal helper type which accepts any Cases object.
+ */
+interface AnyCases {
+    [tag: string]: ((value: unknown) => unknown) | undefined
+    [WILDCARD]?: () => unknown
+}
+
+/**
  * Function for matching on the tag of a {@link Variant}.
  * All possible cases need to be covered, unless a wildcard case is present.
  * @param variant
@@ -207,7 +215,7 @@ export function match<Var extends AnyVariant, C extends Cases<Var>>(
     variant: Var,
     cases: C,
 ): CasesReturn<Var, C>
-export function match(variant: AnyVariant, cases: CasesWildcard<AnyVariant>): unknown {
+export function match(variant: AnyVariant, cases: AnyCases): unknown {
     const caseFn = cases[variant.tag]
     if (caseFn) {
         return caseFn(variant.value)
