@@ -3,14 +3,14 @@
   "version": "1.5.1",
   "description": "A Typescript library for creating discriminating union types.",
   "keywords": [
-    "typescript",
-    "ts",
-    "discriminating",
-    "union",
-    "type",
+    "adt",
     "algebraic",
-    "sum",
-    "enum"
+    "discriminating",
+    "enum",
+    "ts",
+    "type",
+    "typescript",
+    "union"
   ],
   "author": "Felix Schorer",
   "repository": "https://github.com/practical-fp/union-types.git",
