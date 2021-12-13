@@ -96,6 +96,8 @@ const sideLengths = shapes.filter(Square.is).map(square => square.value.sideLeng
 
 [`ts-pattern`](https://github.com/gvergnaud/ts-pattern) should be used for matching against unions.
 
+`Circle.select` and `Square.select` can be used to construct a pattern which selects the value of the variant.
+
 ```typescript
 import { match } from "ts-pattern"
 
@@ -103,6 +105,18 @@ function getArea(shape: Shape) {
     return match(shape)
         .with(Circle.select(), ({ radius }) => Math.PI * radius ** 2)
         .with(Square.select(), ({ sideLength }) => sideLength ** 2)
+        .exhaustive()
+}
+```
+
+`Circle.pattern` and `Square.pattern` can be used to construct more complex patterns.
+```typescript
+import { match, select } from "ts-pattern";
+
+function getArea(shape: Shape) {
+    return match(shape)
+        .with(Circle.pattern({ radius: select() }), radius => Math.PI * radius ** 2)
+        .with(Square.pattern({ sideLength: select() }), sideLength => sideLength ** 2)
         .exhaustive()
 }
 ```
