@@ -6,14 +6,15 @@
 [![Tree shaking support badge](https://badgen.net/bundlephobia/tree-shaking/@practical-fp/union-types)](https://bundlephobia.com/result?p=@practical-fp/union-types)
 ![License badge](https://img.shields.io/npm/l/@practical-fp/union-types)
 
-A Typescript library for creating discriminating union types. Requires Typescript 3.5 or higher.
+A Typescript library for creating discriminating union types. Requires Typescript 4.2 or higher.
 
 [Typescript Handbook on discriminating union types](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions)
 
 ## Example
 
 ```typescript
-import { impl, matchExhaustive, Variant } from "@practical-fp/union-types"
+import { impl, Variant } from "@practical-fp/union-types"
+import { match } from "ts-pattern"
 
 type Shape =
     | Variant<"Circle", { radius: number }>
@@ -22,10 +23,10 @@ type Shape =
 const { Circle, Square } = impl<Shape>()
 
 function getArea(shape: Shape) {
-    return matchExhaustive(shape, {
-        Circle: ({ radius }) => Math.PI * radius ** 2,
-        Square: ({ sideLength }) => sideLength ** 2,
-    })
+    return match(shape)
+        .with(Circle.select(), ({ radius }) => Math.PI * radius ** 2)
+        .with(Square.select(), ({ sideLength }) => sideLength ** 2)
+        .exhaustive()
 }
 
 const circle = Circle({ radius: 5 })
@@ -35,7 +36,7 @@ const area = getArea(circle)
 ## Installation
 
 ```bash
-$ npm install @practical-fp/union-types
+$ npm install @practical-fp/union-types ts-pattern
 ```
 
 ## Usage
@@ -54,8 +55,8 @@ This is equivalent to the following type:
 
 ```typescript
 type Shape =
-    | { tag: "Circle", value: { radius: number } }
-    | { tag: "Square", value: { sideLength: number } }
+    | { type: "Circle", value: { radius: number } }
+    | { type: "Square", value: { sideLength: number } }
 ```
 
 ### Creating an implementation
@@ -70,10 +71,10 @@ const { Circle, Square } = impl<Shape>()
 for [Proxies](https://caniuse.com/?search=Proxy). Alternatively, use the `constructor<>()` function.
 
 ```typescript
-import { constructor } from "@practical-fp/union-types"
+import { variantImpl } from "@practical-fp/union-types"
 
-const Circle = constructor<Shape, "Circle">("Circle")
-const Square = constructor<Shape, "Square">("Square")
+const Circle = variantImpl<Shape, "Circle">("Circle")
+const Square = variantImpl<Shape, "Square">("Square")
 ```
 
 `Circle` and `Square` can then be used to wrap values as a `Shape`.
@@ -91,66 +92,23 @@ const shapes: Shape[] = [circle, square]
 const sideLengths = shapes.filter(Square.is).map(square => square.value.sideLength)
 ```
 
-You can also create custom implementations using the `tag()` and `predicate()` helper functions.
-
-```typescript
-import { predicate, tag } from "@practical-fp/union-types"
-
-const Circle = (radius: number) => tag("Circle", { radius })
-const isCircle = predicate("Circle")
-
-const Square = (sideLength: number) => tag("Square", { sideLength })
-const isSquare = predicate("Square")
-```
-
 ### Matching against a union
 
+[`ts-pattern`](https://github.com/gvergnaud/ts-pattern) should be used for matching against unions.
+
 ```typescript
-import { matchExhaustive } from "@practical-fp/union-types"
+import { match } from "ts-pattern"
 
 function getArea(shape: Shape) {
-    return matchExhaustive(shape, {
-        Circle: ({ radius }) => Math.PI * radius ** 2,
-        Square: ({ sideLength }) => sideLength ** 2,
-    })
-}
-```
-
-`matchExhaustive()` is exhaustive, i.e., you need to match against every variant of the union.
-Cases can be omitted when using a wildcard case with `matchWildcard()`.
-
-```typescript
-import { matchWildcard, WILDCARD } from "@practical-fp/union-types"
-
-function getDiameter(shape: Shape) {
-    return matchWildcard(shape, {
-        Circle: ({ radius }) => radius * 2,
-        [WILDCARD]: () => undefined,
-    })
-}
-```
-
-`switch`-statements can also be used to match against a union.
-
-```typescript
-import { assertNever } from "@practical-fp/union-types"
-
-function getArea(shape: Shape) {
-    switch (shape.tag) {
-        case "Circle":
-            return Math.PI * shape.value.radius ** 2
-        case "Square":
-            return shape.value.sideLength ** 2
-        default:
-            // exhaustiveness check
-            // compile-time error if a case is missing
-            assertNever(shape)  
-    }
+    return match(shape)
+        .with(Circle.select(), ({ radius }) => Math.PI * radius ** 2)
+        .with(Square.select(), ({ sideLength }) => sideLength ** 2)
+        .exhaustive()
 }
 ```
 
 ### Generics
-`impl<>()` and `constructor<>()` also support generic union types.
+`impl<>()` and `variantImpl<>()` also support generic union types.
 
 In case the variant type uses unconstrained generics, 
 `unknown` needs to be passed as its type arguments.
@@ -176,33 +134,4 @@ type Result<T extends object, E> =
     | Variant<"Err", E>
 
 const { Ok, Err } = impl<Result<object, unknown>>()
-```
-
-### `strictImpl<>()` and `strictConstructor<>()`
-`impl<>()` and `constructor<>()` generate generic constructor functions.
-This may not always be desirable.
-
-```typescript
-import { impl } from "@practical-fp/union-types"
-
-const { Circle } = impl<Shape>()
-const circle = Circle({
-    radius: 5,
-    color: "red",
-})
-```
-
-Since `Circle` is generic, it's perfectly fine to pass extra properties other than `radius`.
-
-To prevent that, we can use `strictImpl<>()` or `strictConstructor<>()` to create a strict 
-implementation which is not generic.
-
-```typescript
-import { strictImpl } from "@practical-fp/union-types"
-
-const { Circle } = strictImpl<Shape>()
-const circle = Circle({
-    radius: 5,
-    color: "red",  // compile error
-})
 ```

@@ -1,33 +1,28 @@
-import { assert, IsExact } from "conditional-type-checks"
+import { assert, Has, IsExact } from "conditional-type-checks"
 import {
-    assertNever,
-    constructor,
-    Constructor,
-    hasTag,
+    AnyVariant,
+    hasType,
     impl,
-    match,
-    matchExhaustive,
-    matchWildcard,
     Narrow,
     predicate,
-    tag,
-    Tags,
-    untag,
+    Types,
     Values,
+    variant,
     Variant,
-    WILDCARD,
+    VariantImpl,
+    variantImpl,
 } from "../src"
 
-test("Tags should extract the tag of a variant", () => {
+test("Types should extract the type of a variant", () => {
     type Var = Variant<"1">
-    type Actual = Tags<Var>
+    type Actual = Types<Var>
     type Expected = "1"
     assert<IsExact<Actual, Expected>>(true)
 })
 
-test("Tags should extract all tags of a union", () => {
+test("Types should extract all tags of a union", () => {
     type Union = Variant<"1"> | Variant<"2">
-    type Actual = Tags<Union>
+    type Actual = Types<Union>
     type Expected = "1" | "2"
     assert<IsExact<Actual, Expected>>(true)
 })
@@ -94,110 +89,62 @@ test("predicate should work with unrelated tags", () => {
     assert<IsExact<Actual, Expected>>(true)
 })
 
-test("match should infer the return value", () => {
-    type Union = Variant<"1", number> | Variant<"2">
-
-    const result = match({} as Union, {
-        1: number => number,
-        2: () => undefined,
-        [WILDCARD]: () => true,
-    })
-
-    type Actual = typeof result
-    type Expected = number | undefined | boolean
-    assert<IsExact<Actual, Expected>>(true)
-})
-
 test("the Constructor function should be unbounded generic", () => {
-    type Actual = Constructor<"1", unknown>
+    type Actual = VariantImpl<"1", unknown>
     type Expected = <T>(value: T) => Variant<"1", T>
-    assert<IsExact<Actual, Expected>>(true)
+    assert<Has<Actual, Expected>>(true)
 })
 
 test("the Constructor function should be bounded to number", () => {
-    type Actual = Constructor<"1", number>
+    type Actual = VariantImpl<"1", number>
     type Expected = <T extends number>(value: T) => Variant<"1", T>
-    assert<IsExact<Actual, Expected>>(true)
+    assert<Has<Actual, Expected>>(true)
 })
 
 test("the Constructor function argument should be optional", () => {
-    type Actual = Constructor<"1", number | undefined>
+    type Actual = VariantImpl<"1", number | undefined>
     type Expected = <T extends number | undefined>(value: T | void) => Variant<"1", T>
-    assert<IsExact<Actual, Expected>>(true)
+    assert<Has<Actual, Expected>>(true)
 })
 
-test("tag should tag objects", () => {
-    const tagged = tag("Test", { number: 42 })
-    expect(hasTag(tagged, "Test")).toBe(true)
+test("type should type objects", () => {
+    const tagged = variant("Test", { number: 42 })
+    expect(hasType(tagged, "Test")).toBe(true)
 })
 
-test("tag should create tagged objects", () => {
-    const tagged = tag("Test")
-    expect(hasTag(tagged, "Test")).toBe(true)
+test("type should create tagged objects", () => {
+    const tagged = variant("Test")
+    expect(hasType(tagged, "Test")).toBe(true)
 })
 
-test("untag should extract the value", () => {
-    const tagged = tag("Test", { number: 42 })
-    expect(untag(tagged)).toEqual({ number: 42 })
+test("hasType should test whether a tagged object has a certain type", () => {
+    const tagged = variant("Test")
+    expect(hasType(tagged, "Test")).toBe(true)
+    expect(hasType(tagged as AnyVariant, "NotTest")).toBe(false)
 })
 
-test("hasTag should test whether a tagged object has a certain tag", () => {
-    const tagged = tag("Test")
-    expect(hasTag(tagged, "Test")).toBe(true)
-    expect(hasTag<Variant, string>(tagged, "NotTest")).toBe(false)
-})
-
-test("predicate should test whether a tagged object has a certain tag", () => {
+test("predicate should test whether a tagged object has a certain type", () => {
     const isTest = predicate("Test")
     const isNotTest = predicate("NotTest")
-    const tagged = tag("Test")
+    const tagged = variant("Test")
     expect(isTest(tagged)).toBe(true)
     expect(isNotTest(tagged)).toBe(false)
 })
 
-test("match should call the matching handler", () => {
-    const result = matchWildcard(tag("Test"), {
-        Test: () => true,
-        [WILDCARD]: () => false,
-    })
-    expect(result).toBe(true)
-})
-
-test("match should call the wildcard", () => {
-    const result = matchWildcard(tag("Test"), {
-        [WILDCARD]: () => true,
-    })
-    expect(result).toBe(true)
-})
-
-test("match should throw an error when an unexpected tag is encountered", () => {
-    const throws = () => {
-        matchExhaustive(tag("Test"), {} as any)
-    }
-    expect(throws).toThrow(Error)
-})
-
-test("assertNever should throw an error", () => {
-    const throws = () => {
-        assertNever(undefined as never)
-    }
-    expect(throws).toThrow(Error)
-})
-
 test("constructor should construct a tagged value", () => {
     type Union = Variant<"1", number> | Variant<"2">
-    const ctor = constructor<Union, "1">("1")
-    expect(ctor(42)).toEqual({ tag: "1", value: 42 })
+    const ctor = variantImpl<Union, "1">("1")
+    expect(ctor(42)).toEqual({ type: "1", value: 42 })
 })
 
 test("impl should construct a tagged value", () => {
     type Union = Variant<"1", number> | Variant<"2">
     const Union = impl<Union>()
-    expect(Union[1](42)).toEqual({ tag: "1", value: 42 })
+    expect(Union[1](42)).toEqual({ type: "1", value: 42 })
 })
 
 test("impl should construct an empty tagged value", () => {
     type Union = Variant<"1", number> | Variant<"2">
     const Union = impl<Union>()
-    expect(Union[2]()).toEqual({ tag: "2", value: undefined })
+    expect(Union[2]()).toEqual({ type: "2", value: undefined })
 })
