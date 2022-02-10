@@ -49,22 +49,22 @@ export type Impl<
     [Type in Var[TypeKey]]: VariantImpl<Var, Type, TypeKey, ValueKey>
 }
 
-export type Pattern<Var extends Variant<string, unknown, PropertyKey, PropertyKey>> = VariantImpl<
-    Var,
-    Var[keyof Var],
-    keyof Var,
-    keyof Var
->
+export type Pattern<Var extends Variant<string, unknown, PropertyKey, PropertyKey>> =
+    | VariantImpl<Var, Var[keyof Var], keyof Var, keyof Var>
+    | null
+    | undefined
 
 export type PatternVariant<
     Var extends Variant<string, unknown, PropertyKey, PropertyKey>,
     P extends Pattern<Var>
-> = Narrow<Var, P["type"] & Var[P["typeKey"]], P["typeKey"]>
+> = P extends VariantImpl<any, any, any, any>
+    ? Narrow<Var, P["type"] & Var[P["typeKey"]], P["typeKey"]>
+    : Var
 
 export type PatternValue<
     Var extends Variant<string, unknown, PropertyKey, PropertyKey>,
     P extends Pattern<Var>
-> = PatternVariant<Var, P>[P["valueKey"]]
+> = P extends VariantImpl<any, any, any, any> ? PatternVariant<Var, P>[P["valueKey"]] : Var
 
 export type TuplePattern<
     Vars extends readonly Variant<string, unknown, PropertyKey, PropertyKey>[]
@@ -120,8 +120,7 @@ declare const matchTuple: MatchTuple<Unpack<[Union, Union]>>
 const t = matchTuple
     .with([Foo, Foo], ([foo, bar]) => foo)
     .with([Foo, Bar], ([foo, bar]) => bar)
-    .with([Bar, Foo], ([foo, bar]) => bar)
-    .with([Bar, Bar], ([foo, bar]) => bar)
+    .with([Bar, null], ([foo, bar]) => bar)
     .done()
 
 declare const match: Match<Union>
