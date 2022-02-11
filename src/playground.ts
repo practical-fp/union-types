@@ -9,13 +9,13 @@ export type Variant<
 > = Record<TypeKey, Type> & Record<ValueKey, Value>
 
 export type Narrow<
-    Var extends Variant<string, unknown, TypeKey, PropertyKey>,
-    Type extends Var[TypeKey],
+    Var extends object,
+    Type extends string,
     TypeKey extends PropertyKey = TYPE
 > = Extract<Var, Record<TypeKey, Type>>
 
 export type Predicate<
-    Var extends Variant<string, unknown, TypeKey, PropertyKey>,
+    Var extends Record<TypeKey, string>,
     Type extends Var[TypeKey],
     TypeKey extends PropertyKey = TYPE
 > = (variant: Var) => variant is Narrow<Var, Type, TypeKey>
@@ -27,10 +27,10 @@ export type Constructor<
     ValueKey extends PropertyKey = VALUE
 > = <T extends Value>(
     value: undefined extends Value ? T | void : T,
-) => Variant<Type, T, TypeKey, ValueKey>
+) => Record<TypeKey, Type> & Record<ValueKey, T>
 
 export type VariantImpl<
-    Var extends Variant<string, unknown, TypeKey, ValueKey>,
+    Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
     Type extends Var[TypeKey],
     TypeKey extends PropertyKey = TYPE,
     ValueKey extends PropertyKey = VALUE
@@ -42,89 +42,80 @@ export type VariantImpl<
 }
 
 export type Impl<
-    Var extends Variant<string, unknown, TypeKey, ValueKey>,
+    Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
     TypeKey extends PropertyKey = TYPE,
     ValueKey extends PropertyKey = VALUE
 > = {
     [Type in Var[TypeKey]]: VariantImpl<Var, Type, TypeKey, ValueKey>
 }
 
-export type Pattern<Var extends Variant<string, unknown, PropertyKey, PropertyKey>> =
-    | VariantImpl<Var, Var[keyof Var], keyof Var, keyof Var>
+export type Pattern<Var extends object> =
+    | { type: string; typeKey: keyof Var; valueKey: keyof Var }
     | null
     | undefined
 
-export type PatternVariant<
-    Var extends Variant<string, unknown, PropertyKey, PropertyKey>,
-    P extends Pattern<Var>
-> = P extends VariantImpl<any, any, any, any>
-    ? Narrow<Var, P["type"] & Var[P["typeKey"]], P["typeKey"]>
+export type NarrowPattern<Var extends object, P extends Pattern<Var>> = P extends {
+    type: infer Type
+    typeKey: infer TypeKey
+}
+    ? Narrow<Var, Type & string, TypeKey & PropertyKey>
     : Var
 
-export type PatternValue<
-    Var extends Variant<string, unknown, PropertyKey, PropertyKey>,
-    P extends Pattern<Var>
-> = P extends VariantImpl<any, any, any, any> ? PatternVariant<Var, P>[P["valueKey"]] : Var
+export type PatternValue<Var extends object, P extends Pattern<Var>> = P extends {
+    valueKey: infer ValueKey
+}
+    ? NarrowPattern<Var, P>[ValueKey & keyof Var]
+    : Var
 
-export type TuplePattern<
-    Vars extends readonly Variant<string, unknown, PropertyKey, PropertyKey>[]
-> = { [Idx in keyof Vars]: Pattern<Vars[Idx & number]> }
+export interface Matcher<Var extends object, Result = never, Handled extends Var = never> {
+    with<P extends Pattern<Var>, HandlerReturn>(
+        pattern: P,
+        handler: (value: PatternValue<Var, P>) => HandlerReturn,
+    ): Matcher<Var, Result | HandlerReturn, Handled | NarrowPattern<Var, P>>
 
-export type TuplePatternVariant<
-    Vars extends readonly Variant<string, unknown, PropertyKey, PropertyKey>[],
-    P extends TuplePattern<Vars>
-> = { [Idx in keyof Vars]: PatternVariant<Vars[Idx & number], P[Idx]> }
+    done(): Result | Exclude<Var, Handled>
+}
 
-export type TuplePatternValue<
-    Vars extends readonly Variant<string, unknown, PropertyKey, PropertyKey>[],
-    P extends TuplePattern<Vars>
-> = { [Idx in keyof Vars]: PatternValue<Vars[Idx & number], P[Idx]> }
+export type TuplePattern<Vars extends object[]> = {
+    [Idx in keyof Vars]: Pattern<Vars[Idx & number]>
+}
 
-type Unpack<T extends readonly unknown[]> = T extends [infer Head, ...infer Tail]
+export type NarrowTuplePattern<Vars extends object[], P extends TuplePattern<Vars>> = {
+    [Idx in keyof Vars]: NarrowPattern<Vars[Idx & number], P[Idx]>
+}
+
+export type TuplePatternValue<Vars extends object[], P extends TuplePattern<Vars>> = {
+    [Idx in keyof Vars]: PatternValue<Vars[Idx & number], P[Idx]>
+}
+
+type Unpack<T extends unknown[]> = T extends [infer Head, ...infer Tail]
     ? Head extends any
         ? [Head, ...Unpack<Tail>]
         : never
     : []
 
-export interface MatchTuple<
-    Vars extends readonly Variant<string, unknown, never, never>[],
-    Result = never,
-    Handled extends readonly Variant<string, unknown, never, never>[] = never
-> {
+export interface TupleMatcher<Vars extends object[], Result = never, Handled extends Vars = never> {
     with<P extends TuplePattern<Vars>, HandlerReturn>(
         pattern: P,
         handler: (values: TuplePatternValue<Vars, P>) => HandlerReturn,
-    ): MatchTuple<Vars, Result | HandlerReturn, Handled | TuplePatternVariant<Vars, P>>
+    ): TupleMatcher<Vars, Result | HandlerReturn, Handled | NarrowTuplePattern<Vars, P>>
 
     done(): Result | Exclude<Unpack<Vars>, Handled>
-}
-
-export interface Match<
-    Var extends Variant<string, unknown, never, never>,
-    Result = never,
-    Handled extends Variant<string, unknown, never, never> = never
-> {
-    with<P extends Pattern<Var>, HandlerReturn>(
-        pattern: P,
-        handler: (value: PatternValue<Var, P>) => HandlerReturn,
-    ): Match<Var, Result | HandlerReturn, Handled | PatternVariant<Var, P>>
-
-    done(): Result | Exclude<Var, Handled>
 }
 
 type Union = Variant<"Foo", string> | Variant<"Bar", number>
 
 declare const { Foo, Bar }: Impl<Union>
 
-declare const matchTuple: MatchTuple<[Union, Union]>
+declare const matchTuple: TupleMatcher<[Union, Union]>
 
 const t = matchTuple
-    .with([Foo, Foo], ([foo, bar]) => foo)
-    .with([Foo, Bar], ([foo, bar]) => bar)
-    .with([Bar, null], ([foo, bar]) => foo)
+    .with([Foo, Foo], ([foo, bar]) => 42)
+    .with([Foo, Bar], ([foo, bar]) => 42)
+    .with([Bar, null], ([foo, bar]) => 42)
     .done()
 
-declare const match: Match<Union>
+declare const match: Matcher<Union>
 
 const t2 = match
     .with(Foo, foo => foo)
