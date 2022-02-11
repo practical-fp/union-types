@@ -1,12 +1,10 @@
 export type TYPE = "type"
 export type VALUE = "value"
 
-export type Variant<
-    Type extends string,
-    Value = unknown,
-    TypeKey extends PropertyKey = TYPE,
-    ValueKey extends PropertyKey = VALUE
-> = Record<TypeKey, Type> & Record<ValueKey, Value>
+export interface Variant<Type extends string, Value = unknown> {
+    type: Type
+    value: Value
+}
 
 export type Narrow<
     Var extends object,
@@ -20,21 +18,17 @@ export type Predicate<
     TypeKey extends PropertyKey = TYPE
 > = (variant: Var) => variant is Narrow<Var, Type, TypeKey>
 
-export type Constructor<
-    Type extends string,
-    Value,
-    TypeKey extends PropertyKey = TYPE,
-    ValueKey extends PropertyKey = VALUE
-> = <T extends Value>(
-    value: undefined extends Value ? T | void : T,
-) => Record<TypeKey, Type> & Record<ValueKey, T>
+type Void<T> = undefined extends T ? void : never
 
-export type VariantImpl<
+export interface VariantImpl<
     Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
     Type extends Var[TypeKey],
     TypeKey extends PropertyKey = TYPE,
     ValueKey extends PropertyKey = VALUE
-> = Constructor<Type, Narrow<Var, Type, TypeKey>[ValueKey], TypeKey, ValueKey> & {
+> {
+    <Value extends Narrow<Var, Type, TypeKey>[ValueKey]>(
+        value: Value | Void<Narrow<Var, Type, TypeKey>[ValueKey]>,
+    ): Record<TypeKey, Type> & Record<ValueKey, Value>
     type: Type
     typeKey: TypeKey
     valueKey: ValueKey
@@ -107,12 +101,12 @@ type Union = Variant<"Foo", string> | Variant<"Bar", number>
 
 declare const { Foo, Bar }: Impl<Union>
 
-declare const matchTuple: TupleMatcher<[Union, Union]>
+declare const matchTuple: TupleMatcher<[Union, Union, Union]>
 
 const t = matchTuple
-    .with([Foo, Foo], ([foo, bar]) => 42)
-    .with([Foo, Bar], ([foo, bar]) => 42)
-    .with([Bar, null], ([foo, bar]) => 42)
+    .with([Foo, Foo, null], ([foo, bar]) => 42)
+    .with([Foo, Bar, null], ([foo, bar]) => 42)
+    .with([Bar, null, Bar], ([foo, bar]) => 42)
     .done()
 
 declare const match: Matcher<Union>
