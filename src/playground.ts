@@ -203,21 +203,21 @@ export function impl<Var extends Variant<string>>(): Impl<Var> {
     return customizedImpl({ typeKey: "type", valueKey: "value" })()
 }
 
+export declare function match<Vars extends object[]>(variants: [...Vars]): TupleMatcher<Vars>
+export declare function match<Var extends object>(variant: Var): Matcher<Var>
+
 type Union = Variant<"Foo", string> | Variant<"Bar", number>
 
 const { Foo, Bar } = impl<Union>()
 
-declare const matchTuple: TupleMatcher<[Union, Union, Union]>
+const value = Bar(42) as Union
 
-const t = matchTuple
-    .with([Foo, Foo, null], ([foo, bar]) => 42)
-    .with([Foo, Bar, null], ([foo, bar]) => 42)
-    .with([Bar, null, Bar], ([foo, bar]) => 42)
+const t = match([value, value])
+    .with([Foo, Foo], ([a, b]) => 42)
+    .with([Bar, Bar], ([a, b]) => 42)
     .done()
 
-declare const match: Matcher<Union>
-
-const t2 = match
+const t2 = match(value)
     .with(Foo, foo => foo)
-    .with(Bar, foo => foo)
+    .with(Bar, bar => bar)
     .done()
