@@ -36,9 +36,7 @@
     "preset": "ts-jest",
     "testEnvironment": "node"
   },
-  "peerDependencies": {
-    "ts-pattern": "^3.3.3"
-  },
+
   "devDependencies": {
     "@types/jest": "^27.0.3",
     "conditional-type-checks": "^1.0.5",
@@ -46,7 +44,6 @@
     "prettier": "^2.1.2",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.1.1",
-    "ts-pattern": "^3.3.3",
     "typescript": "^4.2.4"
   }
 }
