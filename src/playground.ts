@@ -18,7 +18,7 @@ export type Predicate<
     TypeKey extends PropertyKey = TYPE
 > = (variant: Var) => variant is Narrow<Var, Type, TypeKey>
 
-type Void<T> = undefined extends T ? void : never
+type Void<T, U> = T extends U ? void : never
 
 export interface VariantImpl<
     Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
@@ -27,7 +27,7 @@ export interface VariantImpl<
     ValueKey extends PropertyKey = VALUE
 > {
     <Value extends Narrow<Var, Type, TypeKey>[ValueKey]>(
-        value: Value | Void<Narrow<Var, Type, TypeKey>[ValueKey]>,
+        value: Value | Void<undefined, Narrow<Var, Type, TypeKey>[ValueKey]>,
     ): Record<TypeKey, Type> & Record<ValueKey, Value>
     type: Type
     typeKey: TypeKey
@@ -43,10 +43,30 @@ export type Impl<
     [Type in Var[TypeKey]]: VariantImpl<Var, Type, TypeKey, ValueKey>
 }
 
-export type Pattern<Var extends object> =
-    | { type: string; typeKey: keyof Var; valueKey: keyof Var }
-    | null
-    | undefined
+export interface InlineVariantImpl<
+    Var extends Record<TypeKey, string>,
+    Type extends Var[TypeKey],
+    TypeKey extends PropertyKey = TYPE
+> {
+    <Value extends Omit<Narrow<Var, Type, TypeKey>, TypeKey>>(
+        value: Value | Void<object, Omit<Narrow<Var, Type, TypeKey>, TypeKey>>,
+    ): Record<TypeKey, Type> & Omit<Value, TypeKey>
+    type: Type
+    typeKey: TypeKey
+    is: Predicate<Var, Type, TypeKey>
+}
+
+export type InlineImpl<Var extends Record<TypeKey, string>, TypeKey extends PropertyKey = TYPE> = {
+    [Type in Var[TypeKey]]: InlineVariantImpl<Var, Type, TypeKey>
+}
+
+export interface VariantPattern<Var extends object> {
+    type: string
+    typeKey: keyof Var
+    valueKey?: keyof Var
+}
+
+export type Pattern<Var extends object> = VariantPattern<Var> | null | undefined
 
 export type NarrowPattern<Var extends object, P extends Pattern<Var>> = P extends {
     type: infer Type
@@ -59,7 +79,7 @@ export type PatternValue<Var extends object, P extends Pattern<Var>> = P extends
     valueKey: infer ValueKey
 }
     ? NarrowPattern<Var, P>[ValueKey & keyof Var]
-    : Var
+    : NarrowPattern<Var, P>
 
 export interface Matcher<Var extends object, Result = never, Handled extends Var = never> {
     with<P extends Pattern<Var>, HandlerReturn>(
