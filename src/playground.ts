@@ -1,3 +1,5 @@
+import { variant } from "./index"
+
 export type TYPE = "type"
 export type VALUE = "value"
 
@@ -122,7 +124,7 @@ type Unpack<T extends unknown[]> = T extends [infer Head, ...infer Tail]
 
 export interface TupleMatcher<Vars extends object[], Result = never, Handled extends Vars = never> {
     with<P extends TuplePattern<Vars>, HandlerReturn>(
-        pattern: P,
+        patterns: P,
         handler: (values: TuplePatternValue<Vars, P>) => HandlerReturn,
     ): TupleMatcher<Vars, Result | HandlerReturn, Handled | NarrowTuplePattern<Vars, P>>
 
@@ -203,8 +205,82 @@ export function impl<Var extends Variant<string>>(): Impl<Var> {
     return customizedImpl({ typeKey: "type", valueKey: "value" })()
 }
 
-export declare function match<Vars extends object[]>(variants: [...Vars]): TupleMatcher<Vars>
-export declare function match<Var extends object>(variant: Var): Matcher<Var>
+function matcher<Var extends object>(variant: Var): Matcher<Var> {
+    return {
+        done(): Var {
+            return variant
+        },
+        with<P extends Pattern<Var>, HandlerReturn>(
+            pattern: P,
+            handler: (value: PatternValue<Var, P>) => HandlerReturn,
+        ): Matcher<Var, HandlerReturn, NarrowPattern<Var, P>> {
+            const matches = !pattern || variant[pattern.typeKey] === (pattern.type as never)
+            if (matches) {
+                return {
+                    done(): HandlerReturn {
+                        if (pattern?.valueKey !== undefined) {
+                            return handler(variant[pattern.valueKey] as never)
+                        } else {
+                            return handler(variant as never)
+                        }
+                    },
+                    with(): Matcher<Var, HandlerReturn, any> {
+                        return this
+                    },
+                }
+            } else {
+                return this as never
+            }
+        },
+    }
+}
+
+function tupleMatcher<Vars extends object[]>(variants: [...Vars]): TupleMatcher<Vars> {
+    return {
+        done(): Unpack<Vars> {
+            return variants as never
+        },
+        with<P extends TuplePattern<Vars>, HandlerReturn>(
+            patterns: P,
+            handler: (values: TuplePatternValue<Vars, P>) => HandlerReturn,
+        ): TupleMatcher<Vars, HandlerReturn, NarrowTuplePattern<Vars, P>> {
+            const matches = variants.every((variant, index) => {
+                const pattern = patterns[index]
+                return !pattern || variant[pattern.typeKey] === (pattern.type as never)
+            })
+            if (matches) {
+                return {
+                    done(): HandlerReturn {
+                        const value = variants.map((variant, index) => {
+                            const pattern = patterns[index]
+                            if (pattern?.valueKey !== undefined) {
+                                return variant[pattern.valueKey]
+                            } else {
+                                return variant
+                            }
+                        })
+                        return handler(value as never)
+                    },
+                    with(): TupleMatcher<Vars, HandlerReturn, any> {
+                        return this
+                    },
+                }
+            } else {
+                return this as never
+            }
+        },
+    }
+}
+
+export function match<Vars extends object[]>(variants: [...Vars]): TupleMatcher<Vars>
+export function match<Var extends object>(variant: Var): Matcher<Var>
+export function match(variants: object | object[]): Matcher<object> | TupleMatcher<object[]> {
+    if (Array.isArray(variants)) {
+        return tupleMatcher(variants)
+    } else {
+        return matcher(variants)
+    }
+}
 
 type Union = Variant<"Foo", string> | Variant<"Bar", number>
 
