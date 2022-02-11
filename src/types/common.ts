@@ -15,8 +15,8 @@ export type Predicate<
 
 export type Void<T, U> = T extends U ? void : never
 
-export type Unpack<T extends unknown[]> = T extends [infer Head, ...infer Tail]
+export type UnpackTuple<T extends unknown[]> = T extends [infer Head, ...infer Tail]
     ? Head extends any
-        ? [Head, ...Unpack<Tail>]
+        ? [Head, ...UnpackTuple<Tail>]
         : never
     : []

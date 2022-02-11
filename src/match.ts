@@ -2,12 +2,12 @@ import {
     Matcher,
     NarrowPattern,
     NarrowTuplePattern,
-    Pattern,
+    OptionalPattern,
     PatternValue,
     TupleMatcher,
     TuplePattern,
     TuplePatternValue,
-    Unpack,
+    UnpackTuple,
 } from "./types"
 
 function matcher<Var extends object>(variant: Var): Matcher<Var> {
@@ -15,7 +15,7 @@ function matcher<Var extends object>(variant: Var): Matcher<Var> {
         done(): Var {
             return variant
         },
-        with<P extends Pattern<Var>, HandlerReturn>(
+        with<P extends OptionalPattern<Var>, HandlerReturn>(
             pattern: P,
             handler: (value: PatternValue<Var, P>) => HandlerReturn,
         ): Matcher<Var, HandlerReturn, NarrowPattern<Var, P>> {
@@ -41,7 +41,7 @@ function matcher<Var extends object>(variant: Var): Matcher<Var> {
 
 function tupleMatcher<Vars extends object[]>(variants: [...Vars]): TupleMatcher<Vars> {
     return {
-        done(): Unpack<Vars> {
+        done(): UnpackTuple<Vars> {
             return variants as never
         },
         with<P extends TuplePattern<Vars>, HandlerReturn>(

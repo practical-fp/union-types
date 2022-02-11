@@ -1,28 +1,28 @@
-import { Narrow, Unpack } from "./common"
+import { Narrow, UnpackTuple } from "./common"
 
-export interface VariantPattern<Var extends object> {
+export interface Pattern<Var extends object> {
     type: string
     typeKey: keyof Var
     valueKey?: keyof Var
 }
 
-export type Pattern<Var extends object> = VariantPattern<Var> | null | undefined
+export type OptionalPattern<Var extends object> = Pattern<Var> | null | undefined
 
-export type NarrowPattern<Var extends object, P extends Pattern<Var>> = P extends {
+export type NarrowPattern<Var extends object, P extends OptionalPattern<Var>> = P extends {
     type: infer Type
     typeKey: infer TypeKey
 }
     ? Narrow<Var, Type & string, TypeKey & PropertyKey>
     : Var
 
-export type PatternValue<Var extends object, P extends Pattern<Var>> = P extends {
+export type PatternValue<Var extends object, P extends OptionalPattern<Var>> = P extends {
     valueKey: infer ValueKey
 }
     ? NarrowPattern<Var, P>[ValueKey & keyof Var]
     : NarrowPattern<Var, P>
 
 export interface Matcher<Var extends object, Result = never, Handled extends Var = never> {
-    with<P extends Pattern<Var>, HandlerReturn>(
+    with<P extends OptionalPattern<Var>, HandlerReturn>(
         pattern: P,
         handler: (value: PatternValue<Var, P>) => HandlerReturn,
     ): Matcher<Var, Result | HandlerReturn, Handled | NarrowPattern<Var, P>>
@@ -31,7 +31,7 @@ export interface Matcher<Var extends object, Result = never, Handled extends Var
 }
 
 export type TuplePattern<Vars extends object[]> = {
-    [Idx in keyof Vars]: Pattern<Vars[Idx & number]>
+    [Idx in keyof Vars]: OptionalPattern<Vars[Idx & number]>
 }
 
 export type NarrowTuplePattern<Vars extends object[], P extends TuplePattern<Vars>> = {
@@ -48,5 +48,5 @@ export interface TupleMatcher<Vars extends object[], Result = never, Handled ext
         handler: (values: TuplePatternValue<Vars, P>) => HandlerReturn,
     ): TupleMatcher<Vars, Result | HandlerReturn, Handled | NarrowTuplePattern<Vars, P>>
 
-    done(): Result | Exclude<Unpack<Vars>, Handled>
+    done(): Result | Exclude<UnpackTuple<Vars>, Handled>
 }
