@@ -88,39 +88,40 @@ type Unpack<T extends readonly unknown[]> = T extends [infer Head, ...infer Tail
 
 export interface MatchTuple<
     Vars extends readonly Variant<string, unknown, never, never>[],
-    Result = never
+    Result = never,
+    Handled extends readonly Variant<string, unknown, never, never>[] = never
 > {
     with<P extends TuplePattern<Vars>, HandlerReturn>(
         pattern: P,
         handler: (values: TuplePatternValue<Vars, P>) => HandlerReturn,
-    ): MatchTuple<Exclude<Vars, TuplePatternVariant<Vars, P>>, Result | HandlerReturn>
+    ): MatchTuple<Vars, Result | HandlerReturn, Handled | TuplePatternVariant<Vars, P>>
 
-    done<Return = never>(
-        handler: [Vars] extends [never] ? void : (rest: Vars) => Return,
-    ): Result | Return
+    done(): Result | Exclude<Unpack<Vars>, Handled>
 }
 
-export interface Match<Var extends Variant<string, unknown, never, never>, Result = never> {
+export interface Match<
+    Var extends Variant<string, unknown, never, never>,
+    Result = never,
+    Handled extends Variant<string, unknown, never, never> = never
+> {
     with<P extends Pattern<Var>, HandlerReturn>(
         pattern: P,
         handler: (value: PatternValue<Var, P>) => HandlerReturn,
-    ): Match<Exclude<Var, PatternVariant<Var, P>>, Result | HandlerReturn>
+    ): Match<Var, Result | HandlerReturn, Handled | PatternVariant<Var, P>>
 
-    done<Return = never>(
-        handler: [Var] extends [never] ? void : (rest: Var) => Return,
-    ): Result | Return
+    done(): Result | Exclude<Var, Handled>
 }
 
 type Union = Variant<"Foo", string> | Variant<"Bar", number>
 
 declare const { Foo, Bar }: Impl<Union>
 
-declare const matchTuple: MatchTuple<Unpack<[Union, Union]>>
+declare const matchTuple: MatchTuple<[Union, Union]>
 
 const t = matchTuple
     .with([Foo, Foo], ([foo, bar]) => foo)
     .with([Foo, Bar], ([foo, bar]) => bar)
-    .with([Bar, null], ([foo, bar]) => bar)
+    .with([Bar, null], ([foo, bar]) => foo)
     .done()
 
 declare const match: Match<Union>
