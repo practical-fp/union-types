@@ -20,15 +20,22 @@ export type Predicate<
 
 type Void<T, U> = T extends U ? void : never
 
+export interface VariantConstructor<
+    Type extends string,
+    Value,
+    TypeKey extends PropertyKey = TYPE,
+    ValueKey extends PropertyKey = VALUE
+> {
+    <T extends Value>(value: T | Void<undefined, Value>): Record<TypeKey, Type> &
+        Record<ValueKey, T>
+}
+
 export interface VariantImpl<
     Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
     Type extends Var[TypeKey],
     TypeKey extends PropertyKey = TYPE,
     ValueKey extends PropertyKey = VALUE
-> {
-    <Value extends Narrow<Var, Type, TypeKey>[ValueKey]>(
-        value: Value | Void<undefined, Narrow<Var, Type, TypeKey>[ValueKey]>,
-    ): Record<TypeKey, Type> & Record<ValueKey, Value>
+> extends VariantConstructor<Type, Narrow<Var, Type, TypeKey>[ValueKey], TypeKey, ValueKey> {
     type: Type
     typeKey: TypeKey
     valueKey: ValueKey
@@ -43,14 +50,19 @@ export type Impl<
     [Type in Var[TypeKey]]: VariantImpl<Var, Type, TypeKey, ValueKey>
 }
 
+export interface InlineVariantConstructor<
+    Type extends string,
+    Value extends object,
+    TypeKey extends PropertyKey = TYPE
+> {
+    <T extends Value>(value: T | Void<object, Value>): Record<TypeKey, Type> & Omit<T, TypeKey>
+}
+
 export interface InlineVariantImpl<
     Var extends Record<TypeKey, string>,
     Type extends Var[TypeKey],
     TypeKey extends PropertyKey = TYPE
-> {
-    <Value extends Omit<Narrow<Var, Type, TypeKey>, TypeKey>>(
-        value: Value | Void<object, Omit<Narrow<Var, Type, TypeKey>, TypeKey>>,
-    ): Record<TypeKey, Type> & Omit<Value, TypeKey>
+> extends InlineVariantConstructor<Type, Omit<Narrow<Var, Type, TypeKey>, TypeKey>, TypeKey> {
     type: Type
     typeKey: TypeKey
     is: Predicate<Var, Type, TypeKey>
@@ -117,9 +129,98 @@ export interface TupleMatcher<Vars extends object[], Result = never, Handled ext
     done(): Result | Exclude<Unpack<Vars>, Handled>
 }
 
+function variantImpl<
+    Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
+    Type extends Var[TypeKey],
+    TypeKey extends PropertyKey,
+    ValueKey extends PropertyKey
+>(type: Type, typeKey: TypeKey, valueKey: ValueKey): VariantImpl<Var, Type, TypeKey, ValueKey> {
+    type Value = Narrow<Var, Type, TypeKey>[ValueKey]
+    const constructor = <T extends Value>(value: T | Void<undefined, Value>) =>
+        ({ [typeKey]: type, [valueKey]: value } as Record<TypeKey, Type> & Record<ValueKey, T>)
+
+    constructor.type = type
+    constructor.typeKey = typeKey
+    constructor.valueKey = valueKey
+
+    constructor.is = (variant: Var): variant is Narrow<Var, Type, TypeKey> =>
+        variant[typeKey] === type
+
+    return constructor
+}
+
+function inlineVariantImpl<
+    Var extends Record<TypeKey, string>,
+    Type extends Var[TypeKey],
+    TypeKey extends PropertyKey = TYPE
+>(type: Type, typeKey: TypeKey): InlineVariantImpl<Var, Type, TypeKey> {
+    type Value = Omit<Narrow<Var, Type, TypeKey>, TypeKey>
+    const constructor = <T extends Value>(value: T | Void<object, Value>) =>
+        ({ ...(value as object), [typeKey]: type } as Record<TypeKey, Type> & Omit<T, TypeKey>)
+
+    constructor.type = type
+    constructor.typeKey = typeKey
+
+    constructor.is = (variant: Var): variant is Narrow<Var, Type, TypeKey> =>
+        variant[typeKey] === type
+
+    return constructor
+}
+
+interface CustomizedImplOptions<TypeKey extends PropertyKey, ValueKey extends PropertyKey> {
+    typeKey: TypeKey
+    valueKey: ValueKey
+    inline?: false
+}
+
+interface InlinedImplOptions<TypeKey extends PropertyKey> {
+    typeKey: TypeKey
+    inline: true
+}
+
+export function customizedImpl<TypeKey extends PropertyKey, ValueKey extends PropertyKey>(
+    options: CustomizedImplOptions<TypeKey, ValueKey>,
+): <Var extends Record<TypeKey, string> & Record<ValueKey, unknown>>() => Impl<
+    Var,
+    TypeKey,
+    ValueKey
+>
+export function customizedImpl<TypeKey extends PropertyKey>(
+    options: InlinedImplOptions<TypeKey>,
+): <Var extends Record<TypeKey, string>>() => InlineImpl<Var, TypeKey>
+export function customizedImpl(
+    options: CustomizedImplOptions<PropertyKey, PropertyKey> | InlinedImplOptions<PropertyKey>,
+): () => Impl<never, never, never> | InlineImpl<never, never> {
+    if (options.inline) {
+        return () =>
+            new Proxy(
+                {},
+                {
+                    get: (_, type: string) => {
+                        return inlineVariantImpl(type, options.typeKey)
+                    },
+                },
+            )
+    } else {
+        return () =>
+            new Proxy(
+                {},
+                {
+                    get: (_, type: string) => {
+                        return variantImpl(type, options.typeKey, options.valueKey)
+                    },
+                },
+            )
+    }
+}
+
+export function impl<Var extends Variant<string>>(): Impl<Var> {
+    return customizedImpl({ typeKey: "type", valueKey: "value" })()
+}
+
 type Union = Variant<"Foo", string> | Variant<"Bar", number>
 
-declare const { Foo, Bar }: Impl<Union>
+const { Foo, Bar } = impl<Union>()
 
 declare const matchTuple: TupleMatcher<[Union, Union, Union]>
 
