@@ -1,5 +1,3 @@
-import { variant } from "./index"
-
 export type TYPE = "type"
 export type VALUE = "value"
 
@@ -215,21 +213,20 @@ function matcher<Var extends object>(variant: Var): Matcher<Var> {
             handler: (value: PatternValue<Var, P>) => HandlerReturn,
         ): Matcher<Var, HandlerReturn, NarrowPattern<Var, P>> {
             const matches = !pattern || variant[pattern.typeKey] === (pattern.type as never)
-            if (matches) {
-                return {
-                    done(): HandlerReturn {
-                        if (pattern?.valueKey !== undefined) {
-                            return handler(variant[pattern.valueKey] as never)
-                        } else {
-                            return handler(variant as never)
-                        }
-                    },
-                    with(): Matcher<Var, HandlerReturn, any> {
-                        return this
-                    },
-                }
-            } else {
+            if (!matches) {
                 return this as never
+            }
+
+            const value = pattern?.valueKey !== undefined ? variant[pattern.valueKey] : variant
+            const result = handler(value as never)
+
+            return {
+                done(): HandlerReturn {
+                    return result
+                },
+                with(): Matcher<Var, HandlerReturn, any> {
+                    return this
+                },
             }
         },
     }
@@ -248,25 +245,27 @@ function tupleMatcher<Vars extends object[]>(variants: [...Vars]): TupleMatcher<
                 const pattern = patterns[index]
                 return !pattern || variant[pattern.typeKey] === (pattern.type as never)
             })
-            if (matches) {
-                return {
-                    done(): HandlerReturn {
-                        const value = variants.map((variant, index) => {
-                            const pattern = patterns[index]
-                            if (pattern?.valueKey !== undefined) {
-                                return variant[pattern.valueKey]
-                            } else {
-                                return variant
-                            }
-                        })
-                        return handler(value as never)
-                    },
-                    with(): TupleMatcher<Vars, HandlerReturn, any> {
-                        return this
-                    },
-                }
-            } else {
+            if (!matches) {
                 return this as never
+            }
+
+            const value = variants.map((variant, index) => {
+                const pattern = patterns[index]
+                if (pattern?.valueKey !== undefined) {
+                    return variant[pattern.valueKey]
+                } else {
+                    return variant
+                }
+            })
+            const result = handler(value as never)
+
+            return {
+                done(): HandlerReturn {
+                    return result
+                },
+                with(): TupleMatcher<Vars, HandlerReturn, any> {
+                    return this
+                },
             }
         },
     }
@@ -281,19 +280,3 @@ export function match(variants: object | object[]): Matcher<object> | TupleMatch
         return matcher(variants)
     }
 }
-
-type Union = Variant<"Foo", string> | Variant<"Bar", number>
-
-const { Foo, Bar } = impl<Union>()
-
-const value = Bar(42) as Union
-
-const t = match([value, value])
-    .with([Foo, Foo], ([a, b]) => 42)
-    .with([Bar, Bar], ([a, b]) => 42)
-    .done()
-
-const t2 = match(value)
-    .with(Foo, foo => foo)
-    .with(Bar, bar => bar)
-    .done()
