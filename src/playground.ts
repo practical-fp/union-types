@@ -192,26 +192,11 @@ export function customizedImpl(
     options: CustomizedImplOptions<PropertyKey, PropertyKey> | InlinedImplOptions<PropertyKey>,
 ): () => Impl<never, never, never> | InlineImpl<never, never> {
     if (options.inline) {
-        return () =>
-            new Proxy(
-                {},
-                {
-                    get: (_, type: string) => {
-                        return inlineVariantImpl(type, options.typeKey)
-                    },
-                },
-            )
-    } else {
-        return () =>
-            new Proxy(
-                {},
-                {
-                    get: (_, type: string) => {
-                        return variantImpl(type, options.typeKey, options.valueKey)
-                    },
-                },
-            )
+        const { typeKey } = options
+        return () => new Proxy({}, { get: (_, type: string) => inlineVariantImpl(type, typeKey) })
     }
+    const { typeKey, valueKey } = options
+    return () => new Proxy({}, { get: (_, type: string) => variantImpl(type, typeKey, valueKey) })
 }
 
 export function impl<Var extends Variant<string>>(): Impl<Var> {
