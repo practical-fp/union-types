@@ -67,10 +67,10 @@ const { Circle, Square } = impl<Shape>()
 ```
 
 `impl<>()` can only be used if your environment has full support
-for [Proxies](https://caniuse.com/?search=Proxy). Alternatively, use the `constructor<>()` function.
+for [Proxies](https://caniuse.com/?search=Proxy).
 
 `Circle.is` and `Square.is` can be used to check if a shape is a circle or a square.
-They also act as a type guard.
+They also act as type guards.
 
 ```typescript
 const shapes: Shape[] = [circle, square]
