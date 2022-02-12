@@ -13,8 +13,7 @@ A Typescript library for creating discriminating union types. Requires Typescrip
 ## Example
 
 ```typescript
-import { impl, Variant } from "@practical-fp/union-types"
-import { match } from "ts-pattern"
+import { impl, Variant, match } from "@practical-fp/union-types"
 
 type Shape =
     | Variant<"Circle", { radius: number }>
@@ -24,9 +23,9 @@ const { Circle, Square } = impl<Shape>()
 
 function getArea(shape: Shape) {
     return match(shape)
-        .with(Circle.select(), ({ radius }) => Math.PI * radius ** 2)
-        .with(Square.select(), ({ sideLength }) => sideLength ** 2)
-        .exhaustive()
+        .with(Circle, ({ radius }) => Math.PI * radius ** 2)
+        .with(Square, ({ sideLength }) => sideLength ** 2)
+        .done()
 }
 
 const circle = Circle({ radius: 5 })
@@ -70,20 +69,6 @@ const { Circle, Square } = impl<Shape>()
 `impl<>()` can only be used if your environment has full support
 for [Proxies](https://caniuse.com/?search=Proxy). Alternatively, use the `constructor<>()` function.
 
-```typescript
-import { variantImpl } from "@practical-fp/union-types"
-
-const Circle = variantImpl<Shape, "Circle">("Circle")
-const Square = variantImpl<Shape, "Square">("Square")
-```
-
-`Circle` and `Square` can then be used to wrap values as a `Shape`.
-
-```typescript
-const circle: Shape = Circle({ radius: 5 })
-const square: Shape = Square({ sideLength: 3 })
-```
-
 `Circle.is` and `Square.is` can be used to check if a shape is a circle or a square.
 They also act as a type guard.
 
@@ -92,37 +77,8 @@ const shapes: Shape[] = [circle, square]
 const sideLengths = shapes.filter(Square.is).map(square => square.value.sideLength)
 ```
 
-### Matching against a union
-
-[`ts-pattern`](https://github.com/gvergnaud/ts-pattern) should be used for matching against unions.
-
-`Circle.select` and `Square.select` can be used to construct a pattern which selects the value of the variant.
-
-```typescript
-import { match } from "ts-pattern"
-
-function getArea(shape: Shape) {
-    return match(shape)
-        .with(Circle.select(), ({ radius }) => Math.PI * radius ** 2)
-        .with(Square.select(), ({ sideLength }) => sideLength ** 2)
-        .exhaustive()
-}
-```
-
-`Circle.pattern` and `Square.pattern` can be used to construct more complex patterns.
-```typescript
-import { match, select } from "ts-pattern";
-
-function getArea(shape: Shape) {
-    return match(shape)
-        .with(Circle.pattern({ radius: select() }), radius => Math.PI * radius ** 2)
-        .with(Square.pattern({ sideLength: select() }), sideLength => sideLength ** 2)
-        .exhaustive()
-}
-```
-
 ### Generics
-`impl<>()` and `variantImpl<>()` also support generic union types.
+`impl<>()` also supports generic union types.
 
 In case the variant type uses unconstrained generics, 
 `unknown` needs to be passed as its type arguments.
