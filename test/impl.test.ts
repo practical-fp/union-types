@@ -1,4 +1,5 @@
 import { implFactory, Variant } from "../src"
+import { assert, IsExact } from "conditional-type-checks"
 
 describe("scoped impl", () => {
     type Foo = Variant<"Foo", string>
@@ -16,10 +17,17 @@ describe("scoped impl", () => {
         })
     })
 
-    it("should provide a type guard", () => {
+    it("should provide a predicate", () => {
         const value = Foo("Hello, World!")
         expect(Foo.is(value)).toBe(true)
         expect(Bar.is(value)).toBe(false)
+    })
+
+    it("should work as a type guard", () => {
+        const value = Foo("Hello, World!")
+        if (Foo.is(value)) {
+            assert<IsExact<typeof value, { type: "Foo"; value: "Hello, World!" }>>(true)
+        }
     })
 })
 
@@ -51,5 +59,12 @@ describe("inline impl", () => {
         const value = Foo({ value: "Hello, World!" })
         expect(Foo.is(value)).toBe(true)
         expect(Bar.is(value)).toBe(false)
+    })
+
+    it("should work as a type guard", () => {
+        const value = Foo({ value: "Hello, World!" })
+        if (Foo.is(value)) {
+            assert<IsExact<typeof value, { type: "Foo"; value: string }>>(true)
+        }
     })
 })
