@@ -1,4 +1,4 @@
-import { Narrow, UnpackTuple } from "./common"
+import { Narrow, UnpackTuple, Void } from "./common"
 
 export interface Pattern<Var extends object> {
     type: string
@@ -27,7 +27,9 @@ export interface Matcher<Var extends object, Result = never, Handled extends Var
         handler: (value: PatternValue<Var, P>) => HandlerReturn,
     ): Matcher<Var, Result | HandlerReturn, Handled | NarrowPattern<Var, P>>
 
-    done(): Result | Exclude<Var, Handled>
+    done<HandlerReturn = never>(
+        otherwise: ((variant: Var) => HandlerReturn) | Void<Var, Handled>,
+    ): Result | HandlerReturn
 }
 
 export type TuplePattern<Vars extends object[]> = {
@@ -48,5 +50,7 @@ export interface TupleMatcher<Vars extends object[], Result = never, Handled ext
         handler: (values: TuplePatternValue<Vars, P>) => HandlerReturn,
     ): TupleMatcher<Vars, Result | HandlerReturn, Handled | NarrowTuplePattern<Vars, P>>
 
-    done(): Result | Exclude<UnpackTuple<Vars>, Handled>
+    done<HandlerReturn = never>(
+        otherwise: ((variants: Vars) => HandlerReturn) | Void<UnpackTuple<Vars>, Handled>,
+    ): Result | HandlerReturn
 }
