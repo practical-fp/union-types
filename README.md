@@ -35,7 +35,7 @@ const area = getArea(circle)
 ## Installation
 
 ```bash
-$ npm install @practical-fp/union-types ts-pattern
+$ npm install @practical-fp/union-types
 ```
 
 ## Usage
