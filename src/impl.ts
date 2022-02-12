@@ -1,36 +1,53 @@
 import {
     InlinedImplOptions,
     InlineImpl,
+    InlineTagger,
+    InlineVariantConstructor,
     InlineVariantImpl,
     Narrow,
     ScopedImpl,
     ScopedImplOptions,
+    ScopedTagger,
+    ScopedVariantConstructor,
     ScopedVariantImpl,
     TYPE,
     Variant,
-    Void,
 } from "./types"
 
 function scopedVariantImpl<
     Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
     Type extends Var[TypeKey],
     TypeKey extends PropertyKey,
-    ValueKey extends PropertyKey
+    ValueKey extends PropertyKey,
 >(
     type: Type,
     typeKey: TypeKey,
     valueKey: ValueKey,
 ): ScopedVariantImpl<Var, Type, TypeKey, ValueKey> {
-    type Value = Narrow<Var, Type, TypeKey>[ValueKey]
-    const constructor = <T extends Value>(value: T | Void<undefined, Value>) =>
-        ({ [typeKey]: type, [valueKey]: value } as Record<TypeKey, Type> & Record<ValueKey, T>)
+    type Narrowed = Narrow<Var, Type, TypeKey>
+
+    const tagger = <Value>(value: Value) =>
+        ({ [typeKey]: type, [valueKey]: value } as Record<TypeKey, Type> & Record<ValueKey, Value>)
+
+    function constructor(): Narrowed
+    function constructor(value: Narrowed[ValueKey]): Narrowed
+    function constructor(value?: Narrowed[ValueKey]) {
+        return tagger(value)
+    }
 
     constructor.type = type
     constructor.typeKey = typeKey
     constructor.valueKey = valueKey
 
-    constructor.is = (variant: Var): variant is Narrow<Var, Type, TypeKey> =>
-        variant[typeKey] === type
+    constructor.is = (variant: Var): variant is Narrowed => variant[typeKey] === type
+
+    constructor.refine = <
+        RefinedConstr extends ScopedVariantConstructor<Type, Narrowed[ValueKey], TypeKey, ValueKey>,
+    >(
+        constr: (tagger: ScopedTagger<Type, TypeKey, ValueKey>) => RefinedConstr,
+    ): ScopedVariantImpl<Var, Type, TypeKey, ValueKey, RefinedConstr> => {
+        const fn = constr(tagger)
+    }
 
     return constructor
 }
@@ -38,17 +55,32 @@ function scopedVariantImpl<
 function inlineVariantImpl<
     Var extends Record<TypeKey, string>,
     Type extends Var[TypeKey],
-    TypeKey extends PropertyKey = TYPE
+    TypeKey extends PropertyKey = TYPE,
 >(type: Type, typeKey: TypeKey): InlineVariantImpl<Var, Type, TypeKey> {
-    type Value = Omit<Narrow<Var, Type, TypeKey>, TypeKey>
-    const constructor = <T extends Value>(value: T | Void<object, Value>) =>
-        ({ ...(value as object), [typeKey]: type } as Record<TypeKey, Type> & Omit<T, TypeKey>)
+    type Narrowed = Narrow<Var, Type, TypeKey>
+
+    const tagger = <Value extends object>(value: Value) =>
+        ({ ...value, [typeKey]: type } as Record<TypeKey, Type> & Omit<Value, TypeKey>)
+
+    function constructor(): Narrowed
+    function constructor(value: Omit<Narrowed, TypeKey>): Narrowed
+    function constructor(value: object = {}) {
+        return tagger(value)
+    }
 
     constructor.type = type
     constructor.typeKey = typeKey
 
     constructor.is = (variant: Var): variant is Narrow<Var, Type, TypeKey> =>
         variant[typeKey] === type
+
+    constructor.refine = <
+        RefinedConstr extends InlineVariantConstructor<Type, Omit<Narrowed, TypeKey>, TypeKey>,
+    >(
+        constr: (tagger: InlineTagger<Type, TypeKey>) => RefinedConstr,
+    ): InlineVariantImpl<Var, Type, TypeKey, RefinedConstr> => {
+        const fn = constr(tagger)
+    }
 
     return constructor
 }

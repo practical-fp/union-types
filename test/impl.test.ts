@@ -26,7 +26,7 @@ describe("scoped impl", () => {
     it("should work as a type guard", () => {
         const value = Foo("Hello, World!")
         if (Foo.is(value)) {
-            assert<IsExact<typeof value, { type: "Foo"; value: "Hello, World!" }>>(true)
+            assert<IsExact<typeof value, { type: "Foo"; value: string }>>(true)
         }
     })
 })
@@ -48,7 +48,8 @@ describe("inline impl", () => {
     })
 
     it("should omit colliding properties", () => {
-        const actual = Foo({ value: "Hello, World!", type: "Bar" })
+        const value = { value: "Hello, World!", type: "Bar" }
+        const actual = Foo(value)
         expect(actual).toEqual({
             type: "Foo",
             value: "Hello, World!",
