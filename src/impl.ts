@@ -1,10 +1,13 @@
 import {
+    InlinedImplOptions,
     InlineImpl,
     InlineVariantImpl,
     Narrow,
     ScopedImpl,
+    ScopedImplOptions,
     ScopedVariantImpl,
     TYPE,
+    Variant,
     Void,
 } from "./types"
 
@@ -50,17 +53,6 @@ function inlineVariantImpl<
     return constructor
 }
 
-export interface ScopedImplOptions<TypeKey extends PropertyKey, ValueKey extends PropertyKey> {
-    typeKey: TypeKey
-    valueKey: ValueKey
-    inline?: false
-}
-
-export interface InlinedImplOptions<TypeKey extends PropertyKey> {
-    typeKey: TypeKey
-    inline: true
-}
-
 export function customizeImpl<TypeKey extends PropertyKey, ValueKey extends PropertyKey>(
     options: ScopedImplOptions<TypeKey, ValueKey>,
 ): <Var extends Record<TypeKey, string> & Record<ValueKey, unknown>>() => ScopedImpl<
@@ -81,11 +73,6 @@ export function customizeImpl(
     const { typeKey, valueKey } = options
     return () =>
         new Proxy({}, { get: (_, type: string) => scopedVariantImpl(type, typeKey, valueKey) })
-}
-
-export interface Variant<Type extends string, Value = unknown> {
-    type: Type
-    value: Value
 }
 
 export function impl<Var extends Variant<string>>(): ScopedImpl<Var> {

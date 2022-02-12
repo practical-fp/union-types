@@ -3,9 +3,9 @@
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "target": "es5",
+    "target": "esnext",
     "sourceMap": true,
-    "lib": ["ES6"]
+    "lib": ["es6"]
   },
   "exclude": [
     "node_modules",

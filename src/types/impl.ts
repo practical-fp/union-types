@@ -66,3 +66,19 @@ export interface InlineVariantImpl<
 export type InlineImpl<Var extends Record<TypeKey, string>, TypeKey extends PropertyKey = TYPE> = {
     [Type in Var[TypeKey]]: InlineVariantImpl<Var, Type, TypeKey>
 }
+
+export interface ScopedImplOptions<TypeKey extends PropertyKey, ValueKey extends PropertyKey> {
+    typeKey: TypeKey
+    valueKey: ValueKey
+    inline?: false
+}
+
+export interface InlinedImplOptions<TypeKey extends PropertyKey> {
+    typeKey: TypeKey
+    inline: true
+}
+
+export interface Variant<Type extends string, Value = unknown> {
+    type: Type
+    value: Value
+}
