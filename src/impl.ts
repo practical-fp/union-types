@@ -53,17 +53,17 @@ function inlineVariantImpl<
     return constructor
 }
 
-export function customizeImpl<TypeKey extends PropertyKey, ValueKey extends PropertyKey>(
+export function implFactory<TypeKey extends PropertyKey, ValueKey extends PropertyKey>(
     options: ScopedImplOptions<TypeKey, ValueKey>,
 ): <Var extends Record<TypeKey, string> & Record<ValueKey, unknown>>() => ScopedImpl<
     Var,
     TypeKey,
     ValueKey
 >
-export function customizeImpl<TypeKey extends PropertyKey>(
+export function implFactory<TypeKey extends PropertyKey>(
     options: InlinedImplOptions<TypeKey>,
 ): <Var extends Record<TypeKey, string>>() => InlineImpl<Var, TypeKey>
-export function customizeImpl(
+export function implFactory(
     options: ScopedImplOptions<PropertyKey, PropertyKey> | InlinedImplOptions<PropertyKey>,
 ): () => ScopedImpl<never, never, never> | InlineImpl<never, never> {
     if (options.inline) {
@@ -76,5 +76,5 @@ export function customizeImpl(
 }
 
 export function impl<Var extends Variant<string>>(): ScopedImpl<Var> {
-    return customizeImpl({ typeKey: "type", valueKey: "value" })()
+    return implFactory({ typeKey: "type", valueKey: "value" })()
 }
