@@ -1,15 +1,28 @@
-import { Matcher, Matcher2, Matcher3, Matcher4, OptionalPattern, PatternValue } from "./types"
+import {
+    Matcher,
+    Matcher2,
+    Matcher3,
+    Matcher4,
+    Narrow,
+    OptionalPattern,
+    PatternValue,
+} from "./types"
 
 export function match<Var>(variant: Var): Matcher<Var> {
     return {
         done<HandlerReturn>(otherwise: (variant: Var) => HandlerReturn): HandlerReturn {
             return otherwise(variant)
         },
-        with<Narrowed extends Var, HandlerReturn, ValueKey extends keyof Var = never>(
-            pattern: OptionalPattern<Var, Narrowed, ValueKey>,
-            handler: (value: PatternValue<Narrowed, ValueKey>) => HandlerReturn,
-        ): Matcher<Var, HandlerReturn, Narrowed> {
-            if (pattern && !pattern.is(variant)) {
+        with<
+            HandlerReturn,
+            Type extends Var[TypeKey],
+            TypeKey extends keyof Var,
+            ValueKey extends keyof Var = never
+        >(
+            pattern: OptionalPattern<Type, TypeKey, ValueKey>,
+            handler: (value: PatternValue<Var, Type, TypeKey, ValueKey>) => HandlerReturn,
+        ): Matcher<Var, HandlerReturn, Narrow<Var, Type, TypeKey>> {
+            if (pattern && variant[pattern.typeKey] !== pattern.type) {
                 return this
             }
 
@@ -34,24 +47,37 @@ export function match2<Var1, Var2>(variants: [Var1, Var2]): Matcher2<Var1, Var2>
             return otherwise(variants)
         },
         with<
-            Narrowed1 extends Var1,
-            Narrowed2 extends Var2,
             HandlerReturn,
+            Type1 extends Var1[TypeKey1],
+            Type2 extends Var2[TypeKey2],
+            TypeKey1 extends keyof Var1,
+            TypeKey2 extends keyof Var2,
             ValueKey1 extends keyof Var1 = never,
             ValueKey2 extends keyof Var2 = never
         >(
             patterns: [
-                OptionalPattern<Var1, Narrowed1, ValueKey1>,
-                OptionalPattern<Var2, Narrowed2, ValueKey2>,
+                OptionalPattern<Type1, TypeKey1, ValueKey1>,
+                OptionalPattern<Type2, TypeKey2, ValueKey2>,
             ],
             handler: (
-                values: [PatternValue<Narrowed1, ValueKey1>, PatternValue<Narrowed2, ValueKey2>],
+                values: [
+                    PatternValue<Var1, Type1, TypeKey1, ValueKey1>,
+                    PatternValue<Var2, Type2, TypeKey2, ValueKey2>,
+                ],
             ) => HandlerReturn,
-        ): Matcher2<Var1, Var2, HandlerReturn, [Narrowed1, Narrowed2]> {
+        ): Matcher2<
+            Var1,
+            Var2,
+            HandlerReturn,
+            [Narrow<Var1, Type1, TypeKey1>, Narrow<Var2, Type2, TypeKey2>]
+        > {
             const [pattern1, pattern2] = patterns
             const [variant1, variant2] = variants
 
-            if ((pattern1 && !pattern1.is(variant1)) || (pattern2 && !pattern2.is(variant2))) {
+            if (
+                (pattern1 && variant1[pattern1.typeKey] !== pattern1.type) ||
+                (pattern2 && variant2[pattern2.typeKey] !== pattern2.type)
+            ) {
                 return this
             }
 
@@ -79,34 +105,47 @@ export function match3<Var1, Var2, Var3>(variants: [Var1, Var2, Var3]): Matcher3
             return otherwise(variants)
         },
         with<
-            Narrowed1 extends Var1,
-            Narrowed2 extends Var2,
-            Narrowed3 extends Var3,
             HandlerReturn,
+            Type1 extends Var1[TypeKey1],
+            Type2 extends Var2[TypeKey2],
+            Type3 extends Var3[TypeKey3],
+            TypeKey1 extends keyof Var1,
+            TypeKey2 extends keyof Var2,
+            TypeKey3 extends keyof Var3,
             ValueKey1 extends keyof Var1 = never,
             ValueKey2 extends keyof Var2 = never,
             ValueKey3 extends keyof Var3 = never
         >(
             patterns: [
-                OptionalPattern<Var1, Narrowed1, ValueKey1>,
-                OptionalPattern<Var2, Narrowed2, ValueKey2>,
-                OptionalPattern<Var3, Narrowed3, ValueKey3>,
+                OptionalPattern<Type1, TypeKey1, ValueKey1>,
+                OptionalPattern<Type2, TypeKey2, ValueKey2>,
+                OptionalPattern<Type3, TypeKey3, ValueKey3>,
             ],
             handler: (
                 values: [
-                    PatternValue<Narrowed1, ValueKey1>,
-                    PatternValue<Narrowed2, ValueKey2>,
-                    PatternValue<Narrowed3, ValueKey3>,
+                    PatternValue<Var1, Type1, TypeKey1, ValueKey1>,
+                    PatternValue<Var2, Type2, TypeKey2, ValueKey2>,
+                    PatternValue<Var3, Type3, TypeKey3, ValueKey3>,
                 ],
             ) => HandlerReturn,
-        ): Matcher3<Var1, Var2, Var3, HandlerReturn, [Narrowed1, Narrowed2, Narrowed3]> {
+        ): Matcher3<
+            Var1,
+            Var2,
+            Var3,
+            HandlerReturn,
+            [
+                Narrow<Var1, Type1, TypeKey1>,
+                Narrow<Var2, Type2, TypeKey2>,
+                Narrow<Var3, Type3, TypeKey3>,
+            ]
+        > {
             const [pattern1, pattern2, pattern3] = patterns
             const [variant1, variant2, variant3] = variants
 
             if (
-                (pattern1 && !pattern1.is(variant1)) ||
-                (pattern2 && !pattern2.is(variant2)) ||
-                (pattern3 && !pattern3.is(variant3))
+                (pattern1 && variant1[pattern1.typeKey] !== pattern1.type) ||
+                (pattern2 && variant2[pattern2.typeKey] !== pattern2.type) ||
+                (pattern3 && variant3[pattern3.typeKey] !== pattern3.type)
             ) {
                 return this
             }
@@ -138,28 +177,32 @@ export function match4<Var1, Var2, Var3, Var4>(
             return otherwise(variants)
         },
         with<
-            Narrowed1 extends Var1,
-            Narrowed2 extends Var2,
-            Narrowed3 extends Var3,
-            Narrowed4 extends Var4,
             HandlerReturn,
+            Type1 extends Var1[TypeKey1],
+            Type2 extends Var2[TypeKey2],
+            Type3 extends Var3[TypeKey3],
+            Type4 extends Var4[TypeKey4],
+            TypeKey1 extends keyof Var1,
+            TypeKey2 extends keyof Var2,
+            TypeKey3 extends keyof Var3,
+            TypeKey4 extends keyof Var4,
             ValueKey1 extends keyof Var1 = never,
             ValueKey2 extends keyof Var2 = never,
             ValueKey3 extends keyof Var3 = never,
             ValueKey4 extends keyof Var4 = never
         >(
             patterns: [
-                OptionalPattern<Var1, Narrowed1, ValueKey1>,
-                OptionalPattern<Var2, Narrowed2, ValueKey2>,
-                OptionalPattern<Var3, Narrowed3, ValueKey3>,
-                OptionalPattern<Var4, Narrowed4, ValueKey4>,
+                OptionalPattern<Type1, TypeKey1, ValueKey1>,
+                OptionalPattern<Type2, TypeKey2, ValueKey2>,
+                OptionalPattern<Type3, TypeKey3, ValueKey3>,
+                OptionalPattern<Type4, TypeKey4, ValueKey4>,
             ],
             handler: (
                 values: [
-                    PatternValue<Narrowed1, ValueKey1>,
-                    PatternValue<Narrowed2, ValueKey2>,
-                    PatternValue<Narrowed3, ValueKey3>,
-                    PatternValue<Narrowed4, ValueKey4>,
+                    PatternValue<Var1, Type1, TypeKey1, ValueKey1>,
+                    PatternValue<Var2, Type2, TypeKey2, ValueKey2>,
+                    PatternValue<Var3, Type3, TypeKey3, ValueKey3>,
+                    PatternValue<Var4, Type4, TypeKey4, ValueKey4>,
                 ],
             ) => HandlerReturn,
         ): Matcher4<
@@ -168,16 +211,21 @@ export function match4<Var1, Var2, Var3, Var4>(
             Var3,
             Var4,
             HandlerReturn,
-            [Narrowed1, Narrowed2, Narrowed3, Narrowed4]
+            [
+                Narrow<Var1, Type1, TypeKey1>,
+                Narrow<Var2, Type2, TypeKey2>,
+                Narrow<Var3, Type3, TypeKey3>,
+                Narrow<Var4, Type4, TypeKey4>,
+            ]
         > {
             const [pattern1, pattern2, pattern3, pattern4] = patterns
             const [variant1, variant2, variant3, variant4] = variants
 
             if (
-                (pattern1 && !pattern1.is(variant1)) ||
-                (pattern2 && !pattern2.is(variant2)) ||
-                (pattern3 && !pattern3.is(variant3)) ||
-                (pattern4 && !pattern4.is(variant4))
+                (pattern1 && variant1[pattern1.typeKey] !== pattern1.type) ||
+                (pattern2 && variant2[pattern2.typeKey] !== pattern2.type) ||
+                (pattern3 && variant3[pattern3.typeKey] !== pattern3.type) ||
+                (pattern4 && variant4[pattern4.typeKey] !== pattern4.type)
             ) {
                 return this
             }

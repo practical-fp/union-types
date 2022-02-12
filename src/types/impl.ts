@@ -1,13 +1,7 @@
-import { Void } from "./common"
+import { Narrow, Void } from "./common"
 
 export type TYPE = "type"
 export type VALUE = "value"
-
-export type Narrow<
-    Var extends Record<TypeKey, string>,
-    Type extends Var[TypeKey],
-    TypeKey extends PropertyKey = TYPE
-> = Extract<Var, Record<TypeKey, Type>>
 
 export type Predicate<
     Var extends Record<TypeKey, string>,
