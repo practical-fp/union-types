@@ -1,4 +1,5 @@
 import { impl, match, match2, match3, match4, Variant } from "../src"
+import { assert, IsExact } from "conditional-type-checks"
 
 type Foo = Variant<"Foo", string>
 type Bar = Variant<"Bar", number>
@@ -49,6 +50,24 @@ describe("match", () => {
         expect(MATCH).toHaveBeenCalledWith(Bar(42))
         expect(_).not.toHaveBeenCalled()
     })
+
+    it("should infer the correct types", () => {
+        const result = match(Bar(42) as Union)
+            .with(Foo, value => {
+                assert<IsExact<typeof value, string>>(true)
+                return 1 as const
+            })
+            .with(null, value => {
+                assert<IsExact<typeof value, Union>>(true)
+                return 2 as const
+            })
+            .done(value => {
+                assert<IsExact<typeof value, Union>>(true)
+                return 3 as const
+            })
+
+        assert<IsExact<typeof result, 1 | 2 | 3>>(true)
+    })
 })
 
 describe("match2", () => {
@@ -97,6 +116,24 @@ describe("match2", () => {
         expect(result).toBe(2)
         expect(MATCH).toHaveBeenCalledWith([Bar(42), Bar(1337)])
         expect(_).not.toHaveBeenCalled()
+    })
+
+    it("should infer the correct types", () => {
+        const result = match2([Bar(42) as Union, Bar(1337) as Union])
+            .with([Foo, null], value => {
+                assert<IsExact<typeof value, [string, Union]>>(true)
+                return 1 as const
+            })
+            .with([null, Foo], value => {
+                assert<IsExact<typeof value, [Union, string]>>(true)
+                return 2 as const
+            })
+            .done(value => {
+                assert<IsExact<typeof value, [Union, Union]>>(true)
+                return 3 as const
+            })
+
+        assert<IsExact<typeof result, 1 | 2 | 3>>(true)
     })
 })
 
@@ -151,6 +188,28 @@ describe("match3", () => {
         expect(result).toBe(2)
         expect(MATCH).toHaveBeenCalledWith([Bar(42), Bar(1337), Bar(69)])
         expect(_).not.toHaveBeenCalled()
+    })
+
+    it("should infer the correct types", () => {
+        const result = match3([Bar(42) as Union, Bar(1337) as Union, Bar(69) as Union])
+            .with([Foo, null, null], value => {
+                assert<IsExact<typeof value, [string, Union, Union]>>(true)
+                return 1 as const
+            })
+            .with([null, Foo, null], value => {
+                assert<IsExact<typeof value, [Union, string, Union]>>(true)
+                return 2 as const
+            })
+            .with([null, null, Foo], value => {
+                assert<IsExact<typeof value, [Union, Union, string]>>(true)
+                return 3 as const
+            })
+            .done(value => {
+                assert<IsExact<typeof value, [Union, Union, Union]>>(true)
+                return 4 as const
+            })
+
+        assert<IsExact<typeof result, 1 | 2 | 3 | 4>>(true)
     })
 })
 
@@ -229,5 +288,36 @@ describe("match4", () => {
         expect(result).toBe(2)
         expect(MATCH).toHaveBeenCalledWith([Bar(42), Bar(1337), Bar(69), Bar(-1)])
         expect(_).not.toHaveBeenCalled()
+    })
+
+    it("should infer the correct types", () => {
+        const result = match4([
+            Bar(42) as Union,
+            Bar(1337) as Union,
+            Bar(69) as Union,
+            Bar(-1) as Union,
+        ])
+            .with([Foo, null, null, null], value => {
+                assert<IsExact<typeof value, [string, Union, Union, Union]>>(true)
+                return 1 as const
+            })
+            .with([null, Foo, null, null], value => {
+                assert<IsExact<typeof value, [Union, string, Union, Union]>>(true)
+                return 2 as const
+            })
+            .with([null, null, Foo, null], value => {
+                assert<IsExact<typeof value, [Union, Union, string, Union]>>(true)
+                return 3 as const
+            })
+            .with([null, null, null, Foo], value => {
+                assert<IsExact<typeof value, [Union, Union, Union, string]>>(true)
+                return 4 as const
+            })
+            .done(value => {
+                assert<IsExact<typeof value, [Union, Union, Union, Union]>>(true)
+                return 5 as const
+            })
+
+        assert<IsExact<typeof result, 1 | 2 | 3 | 4 | 5>>(true)
     })
 })
