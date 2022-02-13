@@ -1,4 +1,4 @@
-import { Narrow } from "./common"
+import { Narrow, Void } from "./common"
 
 export type TYPE = "type"
 export type VALUE = "value"
@@ -6,79 +6,55 @@ export type VALUE = "value"
 export type Predicate<
     Var extends Record<TypeKey, string>,
     Type extends Var[TypeKey],
-    TypeKey extends PropertyKey = TYPE,
+    TypeKey extends PropertyKey = TYPE
 > = (variant: Var) => variant is Narrow<Var, Type, TypeKey>
 
-export type ScopedTagger<
-    Type extends string,
-    TypeKey extends PropertyKey,
-    ValueKey extends PropertyKey,
-> = <Value>(value: Value) => Record<TypeKey, Type> & Record<ValueKey, Value>
-
-export type ScopedVariantConstructor<
+export interface ScopedVariantConstructor<
     Type extends string,
     Value,
-    TypeKey extends PropertyKey,
-    ValueKey extends PropertyKey,
-    Args extends unknown[] = [undefined] extends [Value] ? [Value] | [] : [Value],
-> = (...args: Args) => Record<TypeKey, Type> & Record<ValueKey, Value>
+    TypeKey extends PropertyKey = TYPE,
+    ValueKey extends PropertyKey = VALUE
+> {
+    <T extends Value>(value: T | Void<undefined, Value>): Record<TypeKey, Type> &
+        Record<ValueKey, T>
+}
 
-export type ScopedVariantImpl<
+export interface ScopedVariantImpl<
     Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
     Type extends Var[TypeKey],
-    TypeKey extends PropertyKey,
-    ValueKey extends PropertyKey,
-    Constr extends ScopedVariantConstructor<
-        Type,
-        Narrow<Var, Type, TypeKey>[ValueKey],
-        TypeKey,
-        ValueKey
-    > = ScopedVariantConstructor<Type, Narrow<Var, Type, TypeKey>[ValueKey], TypeKey, ValueKey>,
-> = Constr & {
+    TypeKey extends PropertyKey = TYPE,
+    ValueKey extends PropertyKey = VALUE
+> extends ScopedVariantConstructor<Type, Narrow<Var, Type, TypeKey>[ValueKey], TypeKey, ValueKey> {
     type: Type
     typeKey: TypeKey
     valueKey: ValueKey
     is: Predicate<Var, Type, TypeKey>
-    refine: <RefinedConstr extends Constr>(
-        constr: (tagger: ScopedTagger<Type, TypeKey, ValueKey>) => RefinedConstr,
-    ) => ScopedVariantImpl<Var, Type, TypeKey, ValueKey, RefinedConstr>
 }
 
 export type ScopedImpl<
     Var extends Record<TypeKey, string> & Record<ValueKey, unknown>,
     TypeKey extends PropertyKey = TYPE,
-    ValueKey extends PropertyKey = VALUE,
+    ValueKey extends PropertyKey = VALUE
 > = {
     [Type in Var[TypeKey]]: ScopedVariantImpl<Var, Type, TypeKey, ValueKey>
 }
 
-export type InlineTagger<Type extends string, TypeKey extends PropertyKey> = <Value extends object>(
-    value: Value,
-) => Record<TypeKey, Type> & Omit<Value, TypeKey>
-
-export type InlineVariantConstructor<
+export interface InlineVariantConstructor<
     Type extends string,
     Value extends object,
-    TypeKey extends PropertyKey,
-    Args extends unknown[] = [object] extends [Value] ? [Value] | [] : [Value],
-> = (...args: Args) => Record<TypeKey, Type> & Omit<Value, TypeKey>
+    TypeKey extends PropertyKey = TYPE
+> {
+    <T extends Value>(value: T | Void<object, Value>): Record<TypeKey, Type> & Omit<T, TypeKey>
+}
 
-export type InlineVariantImpl<
+export interface InlineVariantImpl<
     Var extends Record<TypeKey, string>,
     Type extends Var[TypeKey],
-    TypeKey extends PropertyKey,
-    Constr extends InlineVariantConstructor<
-        Type,
-        Omit<Narrow<Var, Type, TypeKey>, TypeKey>,
-        TypeKey
-    > = InlineVariantConstructor<Type, Omit<Narrow<Var, Type, TypeKey>, TypeKey>, TypeKey>,
-> = Constr & {
+    TypeKey extends PropertyKey = TYPE
+> extends InlineVariantConstructor<Type, Omit<Narrow<Var, Type, TypeKey>, TypeKey>, TypeKey> {
     type: Type
     typeKey: TypeKey
     is: Predicate<Var, Type, TypeKey>
-    refine: <RefinedConstr extends Constr>(
-        constr: (tagger: InlineTagger<Type, TypeKey>) => RefinedConstr,
-    ) => InlineVariantImpl<Var, Type, TypeKey, RefinedConstr>
 }
 
 export type InlineImpl<Var extends Record<TypeKey, string>, TypeKey extends PropertyKey = TYPE> = {
