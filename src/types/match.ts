@@ -1,179 +1,72 @@
-import { Narrow, UnpackTuple, Void } from "./common"
+import { UnpackTuple, Void } from "./common"
 
-export interface Pattern<Type, TypeKey extends PropertyKey, ValueKey extends PropertyKey> {
-    type: Type
-    typeKey: TypeKey
-    valueKey?: ValueKey
+export type Guard<T, Narrowed extends T> = (variant: T) => variant is Narrowed
+
+export interface Matcher<T, Result = never, Handled extends T = never> {
+    with<Narrowed extends T, Return>(
+        pattern: Guard<T, Narrowed>,
+        handler: (value: Narrowed) => Return,
+    ): Matcher<T, Result | Return, Handled | Narrowed>
+
+    done<Return = never>(otherwise: ((variant: T) => Return) | Void<T, Handled>): Result | Return
 }
 
-export type OptionalPattern<Type, TypeKey extends PropertyKey, ValueKey extends PropertyKey> =
-    | Pattern<Type, TypeKey, ValueKey>
-    | null
-    | undefined
+export interface Matcher2<T1, T2, Result = never, Handled extends [T1, T2] = never> {
+    with<Narrowed1 extends T1, Narrowed2 extends T2, Return>(
+        patterns: [Guard<T1, Narrowed1>, Guard<T2, Narrowed2>],
+        handler: (values: [Narrowed1, Narrowed2]) => Return,
+    ): Matcher2<T1, T2, Result | Return, Handled | [Narrowed1, Narrowed2]>
 
-export type PatternValue<
-    Var,
-    Type extends Var[TypeKey],
-    TypeKey extends keyof Var,
-    ValueKey extends keyof Var
-> = [ValueKey] extends [never] ? Narrow<Var, Type, TypeKey> : Narrow<Var, Type, TypeKey>[ValueKey]
-
-export interface Matcher<Var, Result = never, Handled extends Var = never> {
-    with<
-        HandlerReturn,
-        Type extends Var[TypeKey],
-        TypeKey extends keyof Var,
-        ValueKey extends keyof Var = never
-    >(
-        pattern: OptionalPattern<Type, TypeKey, ValueKey>,
-        handler: (value: PatternValue<Var, Type, TypeKey, ValueKey>) => HandlerReturn,
-    ): Matcher<Var, Result | HandlerReturn, Handled | Narrow<Var, Type, TypeKey>>
-
-    done<HandlerReturn = never>(
-        otherwise: ((variant: Var) => HandlerReturn) | Void<Var, Handled>,
-    ): Result | HandlerReturn
+    done<Return = never>(
+        otherwise: ((variants: [T1, T2]) => Return) | Void<UnpackTuple<[T1, T2]>, Handled>,
+    ): Result | Return
 }
 
-export interface Matcher2<Var1, Var2, Result = never, Handled extends [Var1, Var2] = never> {
-    with<
-        HandlerReturn,
-        Type1 extends Var1[TypeKey1],
-        Type2 extends Var2[TypeKey2],
-        TypeKey1 extends keyof Var1,
-        TypeKey2 extends keyof Var2,
-        ValueKey1 extends keyof Var1 = never,
-        ValueKey2 extends keyof Var2 = never
-    >(
-        patterns: [
-            OptionalPattern<Type1, TypeKey1, ValueKey1>,
-            OptionalPattern<Type2, TypeKey2, ValueKey2>,
-        ],
-        handler: (
-            values: [
-                PatternValue<Var1, Type1, TypeKey1, ValueKey1>,
-                PatternValue<Var2, Type2, TypeKey2, ValueKey2>,
-            ],
-        ) => HandlerReturn,
-    ): Matcher2<
-        Var1,
-        Var2,
-        Result | HandlerReturn,
-        Handled | [Narrow<Var1, Type1, TypeKey1>, Narrow<Var2, Type2, TypeKey2>]
-    >
+export interface Matcher3<T1, T2, T3, Result = never, Handled extends [T1, T2, T3] = never> {
+    with<Narrowed1 extends T1, Narrowed2 extends T2, Narrowed3 extends T3, Return>(
+        patterns: [Guard<T1, Narrowed1>, Guard<T2, Narrowed2>, Guard<T3, Narrowed3>],
+        handler: (values: [Narrowed1, Narrowed2, Narrowed3]) => Return,
+    ): Matcher3<T1, T2, T3, Result | Return, Handled | [Narrowed1, Narrowed2, Narrowed3]>
 
-    done<HandlerReturn = never>(
-        otherwise:
-            | ((variants: [Var1, Var2]) => HandlerReturn)
-            | Void<UnpackTuple<[Var1, Var2]>, Handled>,
-    ): Result | HandlerReturn
-}
-
-export interface Matcher3<
-    Var1,
-    Var2,
-    Var3,
-    Result = never,
-    Handled extends [Var1, Var2, Var3] = never
-> {
-    with<
-        HandlerReturn,
-        Type1 extends Var1[TypeKey1],
-        Type2 extends Var2[TypeKey2],
-        Type3 extends Var3[TypeKey3],
-        TypeKey1 extends keyof Var1,
-        TypeKey2 extends keyof Var2,
-        TypeKey3 extends keyof Var3,
-        ValueKey1 extends keyof Var1 = never,
-        ValueKey2 extends keyof Var2 = never,
-        ValueKey3 extends keyof Var3 = never
-    >(
-        patterns: [
-            OptionalPattern<Type1, TypeKey1, ValueKey1>,
-            OptionalPattern<Type2, TypeKey2, ValueKey2>,
-            OptionalPattern<Type3, TypeKey3, ValueKey3>,
-        ],
-        handler: (
-            values: [
-                PatternValue<Var1, Type1, TypeKey1, ValueKey1>,
-                PatternValue<Var2, Type2, TypeKey2, ValueKey2>,
-                PatternValue<Var3, Type3, TypeKey3, ValueKey3>,
-            ],
-        ) => HandlerReturn,
-    ): Matcher3<
-        Var1,
-        Var2,
-        Var3,
-        Result | HandlerReturn,
-        | Handled
-        | [
-              Narrow<Var1, Type1, TypeKey1>,
-              Narrow<Var2, Type2, TypeKey2>,
-              Narrow<Var3, Type3, TypeKey3>,
-          ]
-    >
-
-    done<HandlerReturn = never>(
-        otherwise:
-            | ((variants: [Var1, Var2, Var3]) => HandlerReturn)
-            | Void<UnpackTuple<[Var1, Var2, Var3]>, Handled>,
-    ): Result | HandlerReturn
+    done<Return = never>(
+        otherwise: ((variants: [T1, T2, T3]) => Return) | Void<UnpackTuple<[T1, T2, T3]>, Handled>,
+    ): Result | Return
 }
 
 export interface Matcher4<
-    Var1,
-    Var2,
-    Var3,
-    Var4,
+    T1,
+    T2,
+    T3,
+    T4,
     Result = never,
-    Handled extends [Var1, Var2, Var3, Var4] = never
+    Handled extends [T1, T2, T3, T4] = never,
 > {
     with<
-        HandlerReturn,
-        Type1 extends Var1[TypeKey1],
-        Type2 extends Var2[TypeKey2],
-        Type3 extends Var3[TypeKey3],
-        Type4 extends Var4[TypeKey4],
-        TypeKey1 extends keyof Var1,
-        TypeKey2 extends keyof Var2,
-        TypeKey3 extends keyof Var3,
-        TypeKey4 extends keyof Var4,
-        ValueKey1 extends keyof Var1 = never,
-        ValueKey2 extends keyof Var2 = never,
-        ValueKey3 extends keyof Var3 = never,
-        ValueKey4 extends keyof Var4 = never
+        Narrowed1 extends T1,
+        Narrowed2 extends T2,
+        Narrowed3 extends T3,
+        Narrowed4 extends T4,
+        Return,
     >(
         patterns: [
-            OptionalPattern<Type1, TypeKey1, ValueKey1>,
-            OptionalPattern<Type2, TypeKey2, ValueKey2>,
-            OptionalPattern<Type3, TypeKey3, ValueKey3>,
-            OptionalPattern<Type4, TypeKey4, ValueKey4>,
+            Guard<T1, Narrowed1>,
+            Guard<T2, Narrowed2>,
+            Guard<T3, Narrowed3>,
+            Guard<T4, Narrowed4>,
         ],
-        handler: (
-            values: [
-                PatternValue<Var1, Type1, TypeKey1, ValueKey1>,
-                PatternValue<Var2, Type2, TypeKey2, ValueKey2>,
-                PatternValue<Var3, Type3, TypeKey3, ValueKey3>,
-                PatternValue<Var4, Type4, TypeKey4, ValueKey4>,
-            ],
-        ) => HandlerReturn,
+        handler: (values: [Narrowed1, Narrowed2, Narrowed3, Narrowed4]) => Return,
     ): Matcher4<
-        Var1,
-        Var2,
-        Var3,
-        Var4,
-        Result | HandlerReturn,
-        | Handled
-        | [
-              Narrow<Var1, Type1, TypeKey1>,
-              Narrow<Var2, Type2, TypeKey2>,
-              Narrow<Var3, Type3, TypeKey3>,
-              Narrow<Var4, Type4, TypeKey4>,
-          ]
+        T1,
+        T2,
+        T3,
+        T4,
+        Result | Return,
+        Handled | [Narrowed1, Narrowed2, Narrowed3, Narrowed4]
     >
 
-    done<HandlerReturn = never>(
+    done<Return = never>(
         otherwise:
-            | ((variants: [Var1, Var2, Var3, Var4]) => HandlerReturn)
-            | Void<UnpackTuple<[Var1, Var2, Var3, Var4]>, Handled>,
-    ): Result | HandlerReturn
+            | ((variants: [T1, T2, T3, T4]) => Return)
+            | Void<UnpackTuple<[T1, T2, T3, T4]>, Handled>,
+    ): Result | Return
 }
