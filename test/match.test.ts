@@ -1,6 +1,5 @@
-import { match, match2, match3, match4 } from "../src"
+import { field, literal, match, match2, match3, match4, unknown } from "../src"
 import { assert, IsExact } from "conditional-type-checks"
-import { unknown, field, literal } from "../src/pattern"
 
 interface Foo {
     type: "Foo"
