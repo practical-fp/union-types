@@ -1,5 +1,6 @@
 import { match, match2, match3, match4 } from "../src"
 import { assert, IsExact } from "conditional-type-checks"
+import { unknown, field, literal } from "../src/pattern"
 
 interface Foo {
     type: "Foo"
@@ -13,20 +14,11 @@ interface Bar {
 
 type Union = Foo | Bar
 
-function isFoo<T>(value: T): value is Extract<T, { type: "Foo" }> {
-    return typeof value === "object" && value !== null && (value as any)["type"] === "Foo"
-}
+const Foo = field("type", literal("Foo"))
+const Bar = field("type", literal("Bar"))
 
 function mkBar(value: number): Union {
     return { type: "Bar", value }
-}
-
-function isBar<T>(value: T): value is Extract<T, { type: "Bar" }> {
-    return typeof value === "object" && value !== null && (value as any)["type"] === "Bar"
-}
-
-function isAny<T>(value: T): value is T {
-    return true
 }
 
 describe("match", () => {
@@ -34,7 +26,7 @@ describe("match", () => {
         const _ = jest.fn(() => 1)
         const MATCH = jest.fn(() => 2)
 
-        const result = match(mkBar(42)).with(isFoo, _).with(isBar, MATCH).with(isAny, _).done(_)
+        const result = match(mkBar(42)).with(Foo, _).with(Bar, MATCH).with(unknown, _).done(_)
 
         expect(result).toBe(2)
         expect(MATCH).toHaveBeenCalledWith(mkBar(42))
@@ -45,7 +37,7 @@ describe("match", () => {
         const _ = jest.fn(() => 1)
         const MATCH = jest.fn(() => 2)
 
-        const result = match(mkBar(42)).with(isFoo, _).with(isAny, MATCH).with(isBar, _).done(_)
+        const result = match(mkBar(42)).with(Foo, _).with(unknown, MATCH).with(Bar, _).done(_)
 
         expect(result).toBe(2)
         expect(MATCH).toHaveBeenCalledWith(mkBar(42))
@@ -56,7 +48,7 @@ describe("match", () => {
         const _ = jest.fn(() => 1)
         const MATCH = jest.fn(() => 2)
 
-        const result = match(mkBar(42)).with(isFoo, _).done(MATCH)
+        const result = match(mkBar(42)).with(Foo, _).done(MATCH)
 
         expect(result).toBe(2)
         expect(MATCH).toHaveBeenCalledWith(mkBar(42))
@@ -65,11 +57,11 @@ describe("match", () => {
 
     it("should infer the correct types", () => {
         const result = match(mkBar(42))
-            .with(isFoo, value => {
+            .with(Foo, value => {
                 assert<IsExact<typeof value, Foo>>(true)
                 return 1 as const
             })
-            .with(isAny, value => {
+            .with(unknown, value => {
                 assert<IsExact<typeof value, Union>>(true)
                 return 2 as const
             })
@@ -88,9 +80,9 @@ describe("match2", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match2([mkBar(42), mkBar(1337)])
-            .with([isFoo, isFoo], _)
-            .with([isBar, isBar], MATCH)
-            .with([isAny, isAny], _)
+            .with([Foo, Foo], _)
+            .with([Bar, Bar], MATCH)
+            .with([unknown, unknown], _)
             .done(_)
 
         expect(result).toBe(2)
@@ -103,9 +95,9 @@ describe("match2", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match2([mkBar(42), mkBar(1337)])
-            .with([isFoo, isFoo], _)
-            .with([isAny, isAny], MATCH)
-            .with([isBar, isBar], _)
+            .with([Foo, Foo], _)
+            .with([unknown, unknown], MATCH)
+            .with([Bar, Bar], _)
             .done(_)
 
         expect(result).toBe(2)
@@ -118,11 +110,11 @@ describe("match2", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match2([mkBar(42), mkBar(1337)])
-            .with([isFoo, isFoo], _)
-            .with([isFoo, isBar], _)
-            .with([isBar, isFoo], _)
-            .with([isFoo, isAny], _)
-            .with([isAny, isFoo], _)
+            .with([Foo, Foo], _)
+            .with([Foo, Bar], _)
+            .with([Bar, Foo], _)
+            .with([Foo, unknown], _)
+            .with([unknown, Foo], _)
             .done(MATCH)
 
         expect(result).toBe(2)
@@ -132,11 +124,11 @@ describe("match2", () => {
 
     it("should infer the correct types", () => {
         const result = match2([mkBar(42), mkBar(1337)])
-            .with([isFoo, isAny], value => {
+            .with([Foo, unknown], value => {
                 assert<IsExact<typeof value, [Foo, Union]>>(true)
                 return 1 as const
             })
-            .with([isAny, isFoo], value => {
+            .with([unknown, Foo], value => {
                 assert<IsExact<typeof value, [Union, Foo]>>(true)
                 return 2 as const
             })
@@ -155,9 +147,9 @@ describe("match3", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match3([mkBar(42), mkBar(1337), mkBar(69)])
-            .with([isFoo, isFoo, isFoo], _)
-            .with([isBar, isBar, isBar], MATCH)
-            .with([isAny, isAny, isAny], _)
+            .with([Foo, Foo, Foo], _)
+            .with([Bar, Bar, Bar], MATCH)
+            .with([unknown, unknown, unknown], _)
             .done(_)
 
         expect(result).toBe(2)
@@ -170,9 +162,9 @@ describe("match3", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match3([mkBar(42), mkBar(1337), mkBar(69)])
-            .with([isFoo, isFoo, isFoo], _)
-            .with([isAny, isAny, isAny], MATCH)
-            .with([isBar, isBar, isBar], _)
+            .with([Foo, Foo, Foo], _)
+            .with([unknown, unknown, unknown], MATCH)
+            .with([Bar, Bar, Bar], _)
             .done(_)
 
         expect(result).toBe(2)
@@ -185,16 +177,16 @@ describe("match3", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match3([mkBar(42), mkBar(1337), mkBar(69)])
-            .with([isFoo, isFoo, isFoo], _)
-            .with([isFoo, isFoo, isBar], _)
-            .with([isFoo, isBar, isFoo], _)
-            .with([isFoo, isBar, isBar], _)
-            .with([isBar, isFoo, isFoo], _)
-            .with([isBar, isFoo, isBar], _)
-            .with([isBar, isBar, isFoo], _)
-            .with([isFoo, isAny, isAny], _)
-            .with([isAny, isFoo, isAny], _)
-            .with([isAny, isAny, isFoo], _)
+            .with([Foo, Foo, Foo], _)
+            .with([Foo, Foo, Bar], _)
+            .with([Foo, Bar, Foo], _)
+            .with([Foo, Bar, Bar], _)
+            .with([Bar, Foo, Foo], _)
+            .with([Bar, Foo, Bar], _)
+            .with([Bar, Bar, Foo], _)
+            .with([Foo, unknown, unknown], _)
+            .with([unknown, Foo, unknown], _)
+            .with([unknown, unknown, Foo], _)
             .done(MATCH)
 
         expect(result).toBe(2)
@@ -204,15 +196,15 @@ describe("match3", () => {
 
     it("should infer the correct types", () => {
         const result = match3([mkBar(42), mkBar(1337), mkBar(69)])
-            .with([isFoo, isAny, isAny], value => {
+            .with([Foo, unknown, unknown], value => {
                 assert<IsExact<typeof value, [Foo, Union, Union]>>(true)
                 return 1 as const
             })
-            .with([isAny, isFoo, isAny], value => {
+            .with([unknown, Foo, unknown], value => {
                 assert<IsExact<typeof value, [Union, Foo, Union]>>(true)
                 return 2 as const
             })
-            .with([isAny, isAny, isFoo], value => {
+            .with([unknown, unknown, Foo], value => {
                 assert<IsExact<typeof value, [Union, Union, Foo]>>(true)
                 return 3 as const
             })
@@ -231,9 +223,9 @@ describe("match4", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match4([mkBar(42), mkBar(1337), mkBar(69), mkBar(-1)])
-            .with([isFoo, isFoo, isFoo, isFoo], _)
-            .with([isBar, isBar, isBar, isBar], MATCH)
-            .with([isAny, isAny, isAny, isAny], _)
+            .with([Foo, Foo, Foo, Foo], _)
+            .with([Bar, Bar, Bar, Bar], MATCH)
+            .with([unknown, unknown, unknown, unknown], _)
             .done(_)
 
         expect(result).toBe(2)
@@ -246,9 +238,9 @@ describe("match4", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match4([mkBar(42), mkBar(1337), mkBar(69), mkBar(-1)])
-            .with([isFoo, isFoo, isFoo, isFoo], _)
-            .with([isAny, isAny, isAny, isAny], MATCH)
-            .with([isBar, isBar, isBar, isBar], _)
+            .with([Foo, Foo, Foo, Foo], _)
+            .with([unknown, unknown, unknown, unknown], MATCH)
+            .with([Bar, Bar, Bar, Bar], _)
             .done(_)
 
         expect(result).toBe(2)
@@ -261,25 +253,25 @@ describe("match4", () => {
         const MATCH = jest.fn(() => 2)
 
         const result = match4([mkBar(42), mkBar(1337), mkBar(69), mkBar(-1)])
-            .with([isFoo, isFoo, isFoo, isFoo], _)
-            .with([isFoo, isFoo, isFoo, isBar], _)
-            .with([isFoo, isFoo, isBar, isFoo], _)
-            .with([isFoo, isFoo, isBar, isBar], _)
-            .with([isFoo, isBar, isFoo, isFoo], _)
-            .with([isFoo, isBar, isFoo, isBar], _)
-            .with([isFoo, isBar, isBar, isFoo], _)
-            .with([isFoo, isBar, isBar, isBar], _)
-            .with([isBar, isFoo, isFoo, isFoo], _)
-            .with([isBar, isFoo, isFoo, isBar], _)
-            .with([isBar, isFoo, isBar, isFoo], _)
-            .with([isBar, isFoo, isBar, isBar], _)
-            .with([isBar, isBar, isFoo, isFoo], _)
-            .with([isBar, isBar, isFoo, isBar], _)
-            .with([isBar, isBar, isBar, isFoo], _)
-            .with([isFoo, isAny, isAny, isAny], _)
-            .with([isAny, isFoo, isAny, isAny], _)
-            .with([isAny, isAny, isFoo, isAny], _)
-            .with([isAny, isAny, isAny, isFoo], _)
+            .with([Foo, Foo, Foo, Foo], _)
+            .with([Foo, Foo, Foo, Bar], _)
+            .with([Foo, Foo, Bar, Foo], _)
+            .with([Foo, Foo, Bar, Bar], _)
+            .with([Foo, Bar, Foo, Foo], _)
+            .with([Foo, Bar, Foo, Bar], _)
+            .with([Foo, Bar, Bar, Foo], _)
+            .with([Foo, Bar, Bar, Bar], _)
+            .with([Bar, Foo, Foo, Foo], _)
+            .with([Bar, Foo, Foo, Bar], _)
+            .with([Bar, Foo, Bar, Foo], _)
+            .with([Bar, Foo, Bar, Bar], _)
+            .with([Bar, Bar, Foo, Foo], _)
+            .with([Bar, Bar, Foo, Bar], _)
+            .with([Bar, Bar, Bar, Foo], _)
+            .with([Foo, unknown, unknown, unknown], _)
+            .with([unknown, Foo, unknown, unknown], _)
+            .with([unknown, unknown, Foo, unknown], _)
+            .with([unknown, unknown, unknown, Foo], _)
             .done(MATCH)
 
         expect(result).toBe(2)
@@ -289,19 +281,19 @@ describe("match4", () => {
 
     it("should infer the correct types", () => {
         const result = match4([mkBar(42), mkBar(1337), mkBar(69), mkBar(-1)])
-            .with([isFoo, isAny, isAny, isAny], value => {
+            .with([Foo, unknown, unknown, unknown], value => {
                 assert<IsExact<typeof value, [Foo, Union, Union, Union]>>(true)
                 return 1 as const
             })
-            .with([isAny, isFoo, isAny, isAny], value => {
+            .with([unknown, Foo, unknown, unknown], value => {
                 assert<IsExact<typeof value, [Union, Foo, Union, Union]>>(true)
                 return 2 as const
             })
-            .with([isAny, isAny, isFoo, isAny], value => {
+            .with([unknown, unknown, Foo, unknown], value => {
                 assert<IsExact<typeof value, [Union, Union, Foo, Union]>>(true)
                 return 3 as const
             })
-            .with([isAny, isAny, isAny, isFoo], value => {
+            .with([unknown, unknown, unknown, Foo], value => {
                 assert<IsExact<typeof value, [Union, Union, Union, Foo]>>(true)
                 return 4 as const
             })
