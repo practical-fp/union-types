@@ -69,6 +69,10 @@ export function literal<L extends Literal>(literal: L) {
 
 export const unknown = of(<T>(value: T): value is T => true)
 
+export const string = of(<T>(value: T): value is Extract<T, string> => typeof value === "string")
+export const number = of(<T>(value: T): value is Extract<T, number> => typeof value === "number")
+export const boolean = of(<T>(value: T): value is Extract<T, boolean> => typeof value === "boolean")
+
 export function field<Key extends PropertyKey, Narrowed>(
     key: Key,
     pattern: Pattern<Narrowed | undefined>,
