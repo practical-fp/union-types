@@ -29,14 +29,18 @@ export function of<Narrowed>(guard: NarrowingGuard<Narrowed>): Pattern<Narrowed>
 
 export type NarrowedType<P extends Pattern<any>> = P[typeof NARROWED_TYPE][number]
 
-export function union<Patterns extends Array<Pattern<any>>>(...patterns: Patterns) {
-    type Narrowed = NarrowedType<Patterns[number]>
+export function union<P extends Pattern<any>, Ps extends ReadonlyArray<Pattern<any>>>(
+    pattern: P,
+    ...patterns: Ps
+) {
+    type Narrowed = NarrowedType<P | Ps[number]>
+    const _patterns = [pattern, ...patterns]
     return of(<T>(value: T): value is Extract<T, Narrowed> => {
-        return patterns.some(pattern => pattern(value))
+        return _patterns.some(pattern => pattern(value))
     })
 }
 
-type IntersectPatterns<Patterns extends Pattern<any>> = (
+type IntersectedType<Patterns extends Pattern<any>> = (
     Patterns extends any ? (_: Patterns) => void : never
 ) extends (_: infer Intersection) => void
     ? Intersection extends Pattern<any>
@@ -44,10 +48,14 @@ type IntersectPatterns<Patterns extends Pattern<any>> = (
         : never
     : never
 
-export function intersection<Patterns extends Array<Pattern<any>>>(...patterns: Patterns) {
-    type Narrowed = IntersectPatterns<Patterns[number]>
+export function intersection<P extends Pattern<any>, Ps extends ReadonlyArray<Pattern<any>>>(
+    pattern: P,
+    ...patterns: Ps
+) {
+    type Narrowed = IntersectedType<P | Ps[number]>
+    const _patterns = [pattern, ...patterns]
     return of(<T>(value: T): value is Extract<T, Narrowed> => {
-        return patterns.every(pattern => pattern(value))
+        return _patterns.every(pattern => pattern(value))
     })
 }
 
